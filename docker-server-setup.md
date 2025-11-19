@@ -2,17 +2,15 @@
 
 
 ## Overview
----
 This guide will cover the basics on how to setup and configure an Ubuntu Server 22.04+ server for use with Docker workloads. The actual execution of Docker workloads will not be covered here.
 
 ## Requirements
----
 
-###### Permissions
+#### Permissions
 | Permission | Reason                                                               |
 | ---------- | -------------------------------------------------------------------- |
 | `sudo`     | Needed for installing packages and making changes to system folders. |
-###### Knowledge
+#### Knowledge
 | Knowledge                 | Level          |
 | ------------------------- | -------------- |
 | Linux CLI                 | `Intermediate` |
@@ -20,20 +18,20 @@ This guide will cover the basics on how to setup and configure an Ubuntu Server 
 | Linux Directory Structure | `Intermediate` |
 
 ## Guide
----
 
-> [!TIP] Use the /srv directory
-> 
+> [!TIP]
+> **Use the /srv directory -**<br/>
 > It's not really used for anything anymore, but is almost always a default directory included in almost all Linux distros.
 
-#### Install Docker
+### Install Docker
 
-> [!WARNING] Use Docker's own documentation for installing Docker on a Linux Server: **https://docs.docker.com/engine/install/**
+> [!WARNING]
+> Use Docker's own documentation for installing Docker on a Linux Server: **https://docs.docker.com/engine/install/**
 
 Follow the instructions provided in the link above to install Docker.
 
 
-#### Create a docker user group
+### Create a docker user group
 
 1. Create a docker group if it doesn't already exist:
 	```shell
@@ -51,7 +49,7 @@ Follow the instructions provided in the link above to install Docker.
 	```  
 
 
-#### Create the docker directory and set initial permissions
+### Create the docker directory and set initial permissions
 
 1. Create docker working directories:
 	```shell
@@ -69,7 +67,7 @@ Follow the instructions provided in the link above to install Docker.
 	```
 
 
-#### Install the acl package and configure the docker directory
+### Install the acl package and configure the docker directory
 
 1. Install the acl (Access Control List) package to auto-set permissions for the docker directory, as well as any newly created file or folder in that directory:
 	```shell
@@ -82,16 +80,18 @@ Follow the instructions provided in the link above to install Docker.
 	```
 
 
-#### Create a subdirectory for any docker workload
+### Create a subdirectory for any docker workload
 
-> [!SUCCESS] You no longer need sudo when working in the /srv/docker directory.
+> [!NOTE]
+> You no longer need sudo when working in the /srv/docker directory.
 
 For any given docker "application stack", create a subdirectory in the docker directory:
 ```shell
 mkdir -p /srv/docker/app-name
 ```
 
-> [!example] Example directory structure:
+> [!TIP]
+> Example directory structure:
 > 
 > ```Directory-Structure
 >/srv/docker/app-name
