@@ -22,13 +22,13 @@ This guide will cover the basics on how to setup and configure an Ubuntu Server 
 ## Guide
 ---
 
-> [!tip] Use the /srv directory
+> [!TIP] Use the /srv directory
 > 
 > It's not really used for anything anymore, but is almost always a default directory included in almost all Linux distros.
 
 #### Install Docker
 
-> [!warning] Use Docker's own documentation for installing Docker on a Linux Server: **https://docs.docker.com/engine/install/**
+> [!WARNING] Use Docker's own documentation for installing Docker on a Linux Server: **https://docs.docker.com/engine/install/**
 
 Follow the instructions provided in the link above to install Docker.
 
@@ -84,7 +84,7 @@ Follow the instructions provided in the link above to install Docker.
 
 #### Create a subdirectory for any docker workload
 
-> [!success] You no longer need sudo when working in the /srv/docker directory.
+> [!SUCCESS] You no longer need sudo when working in the /srv/docker directory.
 
 For any given docker "application stack", create a subdirectory in the docker directory:
 ```shell
