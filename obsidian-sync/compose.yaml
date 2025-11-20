@@ -12,6 +12,8 @@ services:
     restart: unless-stopped
     user: 5984:5984
     env_file: ./.env
+    networks:
+      - cloudflare
     volumes:
       - obsidian-sync-data:/opt/couchdb/data
       - obsidian-sync-etc:/opt/couchdb/etc/local.d
