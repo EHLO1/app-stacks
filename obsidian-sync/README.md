@@ -31,3 +31,4 @@ _This doc assumes use of Cloudflare and a Cloudflare tunnel for service routing.
     Your passphrase of Setup-URI is:  patient-haze
     This passphrase is never shown again, so please note it in a safe place.
    ```
+5. Use the Setup-URI and passphrase from Step 4. in the Self-Hosted LiveSync plugin in the Obsidian app.
