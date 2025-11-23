@@ -1,0 +1,62 @@
+### NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  private:
+    driver: bridge
+
+### SERVICES
+services:
+   # Postgres - SQL Database
+  postgres:
+    image: ghcr.io/ferretdb/postgres-documentdb:17
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - private
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    labels:
+      komodo.skip: # Prevent Komodo from stopping with StopAllContainers
+
+  # FerretDB - MongoDB Adapter for Postgres
+  ferretdb:
+    image: ghcr.io/ferretdb/ferretdb:2
+    container_name: ferretdb
+    restart: unless-stopped
+    environment:
+      FERRETDB_POSTGRESQL_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    networks:
+      - private
+    volumes:
+      - ferretdb-state:/state
+    depends_on:
+      - postgres
+    labels:
+      komodo.skip: # Prevent Komodo from stopping with StopAllContainers
+  
+  # Komodo - Docker Application Stack Build and Deploy Utility
+  komodo-core:
+    image: ghcr.io/moghtech/komodo-core:latest
+    container_name: komodo-core
+    restart: unless-stopped
+    env_file: ./.env
+    networks:
+      - cloudflare
+      - private
+    volumes:
+      - ./data/komodo/backups:/backups
+    depends_on:
+      - ferretdb
+    labels:
+      komodo.skip: # Prevent Komodo from stopping with StopAllContainers
+
+volumes:
+  postgres-data:
+  ferretdb-state:
