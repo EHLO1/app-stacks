@@ -12,7 +12,7 @@ services:
     container_name: cloudflare-tunnel
     restart: unless-stopped
     environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+      - TUNNEL_TOKEN=${S_CLOUDFLARE_TUNNEL_TOKEN}
     networks:
       - cloudflare
     command: tunnel run
