@@ -1,0 +1,38 @@
+### COMPOSE PROJECT NAME
+name: "dns"
+
+### SERVICES
+services:
+  # AdGuard Home - Network Ad-Block and DNS
+  adguard:
+    image: 11notes/adguard:${ADGUARD_IMAGE_TAG}
+    container_name: "adguard"
+    environment:
+      TZ: "America/Chicago"
+    networks:
+      - "cloudflare"
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    read_only: true
+    restart: "always"
+    security_opt:
+      - "no-new-privileges=true"
+    sysctls:
+      # Allow rootless container to access ports < 1024
+      net.ipv4.ip_unprivileged_port_start: 53
+    tmpfs:
+      - "/adguard/run:uid=1000,gid=1000"
+    volumes:
+      - "adguard-etc:/adguard/etc"
+      - "adguard-var:/adguard/var"
+
+### NETWORKS
+networks:
+  cloudflare:
+    external: true
+
+### VOLUMES
+volumes:
+  adguard.etc:
+  adguard.var:

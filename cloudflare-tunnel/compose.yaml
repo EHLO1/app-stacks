@@ -8,7 +8,7 @@ networks:
 services:
   # Cloudflare Tunnel
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:${CLOUDFLARE_IMAGE_TAG}
     container_name: cloudflare-tunnel
     restart: unless-stopped
     environment:
