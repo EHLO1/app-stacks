@@ -24,8 +24,8 @@ services:
     tmpfs:
       - "/adguard/run:uid=1000,gid=1000"
     volumes:
-      - "adguard-etc:/adguard/etc"
-      - "adguard-var:/adguard/var"
+      - "adguard.etc:/adguard/etc"
+      - "adguard.var:/adguard/var"
 
 #-[ NETWORKS
 networks:
