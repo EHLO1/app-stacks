@@ -11,6 +11,7 @@ services:
       TZ: "America/Chicago"
     networks:
       - "cloudflare"
+      - "host"
     ports:
       - "53:53/udp"
       - "53:53/tcp"
