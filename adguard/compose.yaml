@@ -33,6 +33,8 @@ networks:
   # Public / External Network (Cloudflare Tunnel)
   cloudflare:
     external: true
+  host:
+    external: true
 
 #-[ VOLUMES
 volumes:
