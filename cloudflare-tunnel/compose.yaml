@@ -1,21 +1,15 @@
-### NETWORKS
-networks:
-  cloudflare:
-    name: cloudflare
-    driver: bridge
+#-[ PROJECT NAME
+name: "cloudflare-tunnel"
 
-### SERVICES
+#-[ SERVICES
 services:
   # Cloudflare Tunnel
   cloudflared:
     image: cloudflare/cloudflared:${CLOUDFLARE_IMAGE_TAG}
-    container_name: cloudflare-tunnel
-    restart: unless-stopped
+    container_name: "cloudflare-tunnel"
+    command: "tunnel run"
     environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-    networks:
-      - cloudflare
-    command: tunnel run
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}    
     healthcheck:
       test: ["CMD", "cloudflared", "--version"]
       interval: 30s
@@ -27,3 +21,13 @@ services:
       options:
         max-size: "100m"
         max-file: "10"   
+    networks:
+      - "cloudflare"
+    restart: "unless-stopped"
+
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    name: "cloudflare"
+    driver: "bridge"

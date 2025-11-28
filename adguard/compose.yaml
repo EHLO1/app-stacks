@@ -1,7 +1,7 @@
-### COMPOSE PROJECT NAME
+#-[ PROJECT NAME
 name: "dns"
 
-### SERVICES
+#-[ SERVICES
 services:
   # AdGuard Home - Network Ad-Block and DNS
   adguard:
@@ -27,12 +27,13 @@ services:
       - "adguard-etc:/adguard/etc"
       - "adguard-var:/adguard/var"
 
-### NETWORKS
+#-[ NETWORKS
 networks:
+  # Public / External Network (Cloudflare Tunnel)
   cloudflare:
     external: true
 
-### VOLUMES
+#-[ VOLUMES
 volumes:
   adguard.etc:
   adguard.var:

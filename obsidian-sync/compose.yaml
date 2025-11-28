@@ -1,24 +1,28 @@
-### NETWORKS
-networks:
-  cloudflare:
-    external: true
+#-[ PROJECT NAME
+name: "obsidian-sync"
 
-### SERVICES
+#-[ SERVICES
 services:
   # CouchDB - See https://github.com/vrtmrz/obsidian-livesync/blob/main/docs/setup_own_server.md
   couchdb:
     image: couchdb:${COUCHDB_IMAGE_TAG}
-    container_name: obsidian-sync
-    restart: unless-stopped
-    user: 5984:5984
-    env_file: ./.env
+    container_name: "obsidian-sync"
+    env_file: "./.env"
     networks:
-      - cloudflare
+      - "cloudflare"
+    user: "5984:5984"
+    restart: "unless-stopped"
     volumes:
-      - obsidian-sync-data:/opt/couchdb/data
-      - obsidian-sync-etc:/opt/couchdb/etc/local.d
+      - "obsidian-sync-data:/opt/couchdb/data"
+      - "obsidian-sync-etc:/opt/couchdb/etc/local.d"
 
-### VOLUMES
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true
+
+#-[ VOLUMES
 volumes:
   obsidian-sync-data:
   obsidian-sync-etc:
