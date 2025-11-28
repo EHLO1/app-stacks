@@ -9,7 +9,7 @@ services:
     container_name: "cloudflare-tunnel"
     command: "tunnel run"
     environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}    
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     healthcheck:
       test: ["CMD", "cloudflared", "--version"]
       interval: 30s
@@ -20,7 +20,7 @@ services:
       driver: "json-file"
       options:
         max-size: "100m"
-        max-file: "10"   
+        max-file: "10"
     networks:
       - "cloudflare"
     restart: "unless-stopped"
