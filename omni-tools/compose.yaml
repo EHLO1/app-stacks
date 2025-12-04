@@ -1,0 +1,16 @@
+#-[ PROJECT NAME
+name: "omni-tools"
+
+#-[ SERVICES
+services:
+  omni-tools:
+    image: "iib0011/omni-tools:${OMNI_TOOLS_IMAGE_TAG}"
+    container_name: "omni-tools"
+    networks:
+      - "cloudflare"
+    restart: unless-stopped
+
+#-[ NETWORKS
+networks:
+  cloudflare:
+    external: true
