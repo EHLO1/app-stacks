@@ -15,7 +15,7 @@ set -e
 # Variables
 MODE=""
 PROJECT_NAME=""
-ENV_LINK_NAME=".secrets.env"
+ENV_LINK_NAME="../.secrets.env"
 RAM_FILE="/dev/shm/.secrets.env"
 
 # Function: Print Usage
@@ -56,7 +56,7 @@ if [[ "$MODE" == "pre" ]]; then
 
     # 1. Fetch Project List and parse ID
     # We use jq to find the object where name matches, then extract the id
-    PROJECT_ID=$(bws project list | jq -r --arg name "$PROJECT_NAME" '.[] | select(.name == $name) | .id')
+    PROJECT_ID=$(bws project list --access-token "$BWS_ACCESS_TOKEN" | jq -r --arg name "$PROJECT_NAME" '.[] | select(.name == $name) | .id')
 
     if [[ -z "$PROJECT_ID" || "$PROJECT_ID" == "null" ]]; then
         echo "❌ [PRE] Error: Project '$PROJECT_NAME' not found in Bitwarden."
