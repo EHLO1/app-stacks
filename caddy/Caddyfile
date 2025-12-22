@@ -1,0 +1,35 @@
+{
+    email {env.SSL_EMAIL}
+    acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+}
+
+*.jjcasa.net {
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+
+    @subdomain host_regexp sub ^([^.]+)\.jjcasa\.net$
+
+    handle @subdomain {
+        reverse_proxy {
+            # 1. Ask DNS for the backend IP & Port
+            # This looks up: _http._tcp.[subdomain].svc.jjcasa.net
+            dynamic srv {
+                name {re.sub.1}.svc.jjcasa.net
+                service http
+                proto tcp
+            }
+
+            # 2. Configure the Transport
+            transport http {
+                # Enable TLS (HTTPS) by default for backends...
+                tls
+                # ...but some internal apps use self-signed certs, skip verification for those
+                tls_insecure_skip_verify
+
+                # ...EXCEPT for these ports, which should remain plain HTTP.
+                tls_except_ports 80 8080 32400 9000
+            }
+        }
+    }
+}
