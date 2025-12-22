@@ -30,7 +30,7 @@ services:
     image: "docker.n8n.io/n8nio/n8n:${N8N_IMAGE_TAG}"
     container_name: "n8n"
     depends_on:
-      postgres:
+      - "postgres"
     env_file: "./.env"
     networks:
       - "cloudflare"
