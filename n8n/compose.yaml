@@ -31,7 +31,7 @@ services:
     container_name: "n8n"
     depends_on:
       postgres:
-    env_file: "./n8n.env"
+    env_file: "./.env"
     networks:
       - "cloudflare"
       - "private"
