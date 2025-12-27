@@ -1,0 +1,24 @@
+#-[ PROJECT NAME
+name: "caddy"
+
+#-[ SERVICES
+services:
+  # Caddy - Reverse Proxy
+  # Repackaged using Dockerfile to include dns.providers.cloudflare module
+  caddy:
+    image: "caddy"
+    container_name: "caddy"
+    environment:
+      - "CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}"
+      - "SSL_EMAIL=${SSL_EMAIL}"
+    ports:
+      - "80:80"
+      - "443:443"    
+    restart: "unless-stopped"
+    volumes:
+      - "caddy.data:/data"
+      - "./Caddyfile:/etc/caddy/Caddyfile:ro"
+
+#-[ VOLUMES
+volumes:
+  caddy.data:

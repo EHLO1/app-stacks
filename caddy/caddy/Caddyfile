@@ -1,0 +1,26 @@
+{
+    email {env.SSL_EMAIL}
+    acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+}
+
+*.jjcasa.net {
+
+    @subdomain host_regexp sub ^(.+)\.jjcasa\.net$
+
+    handle @subdomain {
+        reverse_proxy {
+            # Look up routing instructions in the dedicated "Service Discovery" zone
+            dynamic srv {
+                name {re.sub.1}.sd.jjcasa.net
+                service http
+                proto tcp
+            }
+
+            transport http {
+                tls
+                tls_insecure_skip_verify
+                tls_except_ports 80 1984 5380 8080 8123 9000
+            }
+        }
+    }
+}
