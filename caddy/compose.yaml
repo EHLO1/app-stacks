@@ -6,7 +6,10 @@ services:
   # Caddy - Reverse Proxy
   # Repackaged using Dockerfile to include dns.providers.cloudflare module
   caddy:
-    image: "caddy"
+    build:
+      context: "."
+      dockerfile: "./Dockerfile"
+    image: "caddy:latest"
     container_name: "caddy"
     env_file: "./.env"
     ports:
