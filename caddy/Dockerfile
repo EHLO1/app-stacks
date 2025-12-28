@@ -1,13 +1,21 @@
-# Dockerfile for Caddy with Cloudflare DNS support
-# Start with the builder image
+# 1. Builder Stage
 FROM caddy:builder AS builder
-
-# Add the Cloudflare DNS module
 RUN xcaddy build \
     --with github.com/caddy-dns/cloudflare
 
-# Build the final image
+# 2. Runtime Stage
 FROM caddy:latest
 
-# Copy the custom binary over the standard one
+# Install jq (Alpine version)
+RUN apk add --no-cache jq bash
+
+# Copy custom binary
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+
+# Copy our bootstrap script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Set the script as the entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
