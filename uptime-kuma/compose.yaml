@@ -1,0 +1,24 @@
+#-[ PROJECT NAME
+name: "uptime-kuma"
+
+#-[ SERVICES
+services:
+  # Uptime Kuma - Statuses, Notifications, Mayhem Regulator
+  uptime-kuma:
+    image: "louislam/uptime-kuma:beta"
+    container_name: "uptime-kuma"
+    networks:
+      - "cloudflare"
+    restart: "unless-stopped"
+    volumes:
+      - "uptime-kuma.data:/app/data"
+
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true
+
+#-[ VOLUMES
+volumes:
+  uptime-kuma.data:
