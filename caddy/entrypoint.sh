@@ -15,7 +15,7 @@ echo "Caddy is up. Requesting config..."
 curl -X POST https://n8n.jjcasa.net/webhook/caddy-config-sync \
      -H "Content-Type: application/json" \
      -H "CF-Access-Client-Id: ${CF_N8N_WEBHOOK_CLIENT_ID}" \
-     -H "CF-Access-Client-Secret: ${CF_N8N_WEBHOOK_CLIENT_SECRET}"
+     -H "CF-Access-Client-Secret: ${CF_N8N_WEBHOOK_CLIENT_SECRET}" \
      -d '{"source": "caddy-boot", "msg": "Hey girl! Can I get yo number?"}'
 
 # Wait for process
