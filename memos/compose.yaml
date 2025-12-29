@@ -1,0 +1,24 @@
+#-[ PROJECT NAME
+name: "memos"
+
+#-[ SERVICES
+services:
+  memos:
+    image: "neosmemo/memos:stable"
+    container_name: "memos"
+    env_file: "./.env"
+    networks:
+      - "cloudflare"
+    restart: "unless-stopped"
+    volumes:
+      - "memos.data:/var/opt/memos"
+
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true
+
+#-[ VOLUMES
+volumes:
+  memos.data:
