@@ -1,21 +1,22 @@
 #!/bin/bash
-set -e
 
-ROUTES="${CADDY_ROUTES:-[]}"
+# Start Caddy with bootstrap config
+caddy run --config /etc/caddy/bootstrap.caddy --adapter caddyfile &
+PID=$!
 
-echo "$ROUTES" | jq -r '
-  .[] | 
-  "\(.subdomain).jjcasa.net {
-      reverse_proxy \(.scheme)://\(.target):\(.port) {
-          \(if .skip_verify == true then "transport http { tls_insecure_skip_verify }" else "" end)
-      }
-      tls {
-        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-      }
-  }
-  "
-' > /etc/caddy/routes.caddy
+# Wait for Caddy
+echo "Waiting for Caddy..."
+until nc -z localhost 2019; do
+  sleep 1
+done
 
-echo "Configuration generated. Starting Caddy..."
+# Signal n8n (Source: caddy-boot)
+echo "Caddy is up. Requesting config..."
+curl -X POST https://n8n.jjcasa.net/webhook/caddy-config-sync \
+     -H "Content-Type: application/json" \
+     -H "CF-Access-Client-Id: ${CF_N8N_WEBHOOK_CLIENT_ID}" \
+     -H "CF-Access-Client-Secret: ${CF_N8N_WEBHOOK_CLIENT_SECRET}"
+     -d '{"source": "caddy-boot", "msg": "Hey girl! Can I get yo number?"}'
 
-exec "$@"
+# Wait for process
+wait $PID
