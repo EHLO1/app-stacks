@@ -5,7 +5,7 @@ name: "obsidian-sync"
 services:
   # CouchDB - See https://github.com/vrtmrz/obsidian-livesync/blob/main/docs/setup_own_server.md
   couchdb:
-    image: couchdb:${COUCHDB_IMAGE_TAG}
+    image: "couchdb:${COUCHDB_IMAGE_TAG}"
     container_name: "obsidian-sync"
     env_file: "./.env"
     networks:
@@ -13,8 +13,8 @@ services:
     user: "5984:5984"
     restart: "unless-stopped"
     volumes:
-      - "obsidian-sync-data:/opt/couchdb/data"
-      - "obsidian-sync-etc:/opt/couchdb/etc/local.d"
+      - "obsidian-sync.data:/opt/couchdb/data"
+      - "obsidian-sync.etc:/opt/couchdb/etc/local.d"
 
 #-[ NETWORKS
 networks:
@@ -24,5 +24,5 @@ networks:
 
 #-[ VOLUMES
 volumes:
-  obsidian-sync-data:
-  obsidian-sync-etc:
+  obsidian-sync.data:
+  obsidian-sync.etc:

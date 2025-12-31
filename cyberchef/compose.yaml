@@ -1,0 +1,17 @@
+#-[ PROJECT NAME
+name: "cyberchef"
+
+#-[ SERVICES
+services:
+  cyberchef:
+    image: "ghcr.io/gchq/cyberchef:latest"
+    container_name: "cyberchef"
+    networks:
+      - "cloudflare"
+    restart: "unless-stopped"
+
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true

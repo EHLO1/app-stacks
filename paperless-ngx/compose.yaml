@@ -1,0 +1,60 @@
+#-[ PROJECT NAME
+name: "paperless-ngx"
+
+#-[ SERVICES
+services:
+  # Redis - Key/Value Store
+  redis:
+    image: "redis:${REDIS_IMAGE_TAG}" #8
+    container_name: "redis"
+    networks:
+      - "private"
+    restart: "unless-stopped"
+    volumes:
+      - "redis.data:/data"
+
+  # Postgres - SQL Database
+  postgres:
+    image: "postgres:${POSTGRES_IMAGE_TAG}" #18
+    container_name: "postgres"
+    environment:
+      - "POSTGRES_DB=${POSTGRES_DB}"
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD${POSTGRES_PASSWORD}"
+    networks:
+      - "private"
+    restart: "unless-stopped"
+    volumes:
+      - "postgres.data:/var/lib/postgresql"
+
+  # Paperless-ngx
+  paperless:
+    image: "ghcr.io/paperless-ngx/paperless-ngx:${PAPERLESS_IMAGE_TAG}"
+    container_name: "paperless"
+    depends_on:
+      - "postgres"
+      - "redis"
+    env_file: "./.env"
+    networks:
+      - "cloudflare"
+      - "private"
+    restart: "unless-stopped"
+    volumes:
+      - paperless.data:/usr/src/paperless/data
+      - paperless.media:/usr/src/paperless/media
+
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  private:
+    driver: "bridge"
+
+#-[ VOLUMES
+volumes:
+  redis.data:
+  postgres.data:
+  paperless.data:
+  paperless.media:
