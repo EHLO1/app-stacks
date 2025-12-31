@@ -13,7 +13,7 @@ services:
     restart: "unless-stopped"
     volumes:
       - "stirling-pdf.data:/configs"             # Settings & database
-      - "stirling-pdf.pipeline/pipeline"         # Automation configs
+      - "stirling-pdf.pipeline:/pipeline"         # Automation configs
 
 #-[ NETWORKS
 networks:
