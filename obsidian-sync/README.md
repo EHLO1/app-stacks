@@ -16,7 +16,7 @@ _This doc assumes use of Cloudflare and a Cloudflare tunnel for service routing.
    ```shell
    docker run --rm -it \
     -e hostname="${OBSIDIAN_SYNC_URL:-https://obsync.example.com}" \
-    -e database="${OBSIDIAN_SYNC_DB_NAME:-supergreatdb}" \
+    -e database="${OBSIDIAN_SYNC_DB_NAME:-obsidian}" \
     -e username="${COUCHDB_USER:-obsidiansync}" \
     -e password="${COUCHDB_PASSWORD:-supergreatpassword}" \
     -e passphrase=${OBSIDIAN_SYNC_E2EE_PASSPHRASE:-supergreate2eepassphrase} \

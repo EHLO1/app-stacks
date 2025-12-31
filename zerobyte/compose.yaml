@@ -1,0 +1,30 @@
+#-[ PROJECT NAME
+name: "zerobyte"
+
+#-[ SERVICES
+services:
+  zerobyte:
+    image: "ghcr.io/nicotsx/zerobyte:latest"
+    container_name: "zerobyte"
+    cap_add:
+      - "SYS_ADMIN"
+    devices:
+      - "/dev/fuse:/dev/fuse"
+    environment:
+      - "TZ=America/Chicago"
+    networks:
+      - "cloudflare"
+    restart: "unless-stopped"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - zerobyte.data:/var/lib/zerobyte
+
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true
+
+#-[ VOLUMES
+volumes:
+  zerobyte.data:
