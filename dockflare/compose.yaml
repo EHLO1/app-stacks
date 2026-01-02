@@ -47,6 +47,7 @@ services:
   redis:
     image: "redis:${REDIS_IMAGE_TAG}"
     container_name: "redis"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
     networks:
       - "private"
     restart: "unless-stopped"
