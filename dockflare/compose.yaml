@@ -1,0 +1,69 @@
+#-[ PROJECT NAME
+name: "dockflare"
+
+#-[ SERVICES
+services:
+  # Docker Socket Proxy - Always use protection
+  socket-proxy:
+    image: "tecnativa/docker-socket-proxy:${SOCKET_PROXY_IMAGE_TAG}"
+    container_name: "socket-proxy"
+    env_file: "./.env"    
+    networks:
+      - "private"
+    restart: "unless-stopped"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  # Init Only - Set Volume permissions
+  dockflare-init:
+    image: "alpine:${ALPINE_IMAGE_TAG}"
+    command: ["sh", "-c", "chown", "-R", "65532:65532", "/app/data"]
+    networks:
+      - private"
+    restart: "no"
+    volumes:
+      - "dockflare.data:/app/data"
+
+  # Dockflare - Cloudflare Tunnel, Access, and DNS Automation Using Docker Labels
+  dockflare:
+    image: "alplat/dockflare:${DOCKFLARE_IMAGE_TAG}"
+    container_name: "dockflare"
+    depends_on:
+      docker-socket-proxy:
+        condition: "service_started"
+      dockflare-init:
+        condition: "service_completed_successfully"
+      redis:
+        condition: "service_started"
+    env_file: "./.env"
+    networks:
+      - "cloudflare"
+      - "private"
+    restart: "unless-stopped"
+    volumes:
+      - "dockflare.data:/app/data"
+
+  # Redis - Key/Value Store
+  redis:
+    image: "redis:${REDIS_IMAGE_TAG}"
+    container_name: "redis"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      - "private"
+    restart: "unless-stopped"
+    volumes:
+      - "redis.data:/data"
+
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  private:
+    driver: "bridge"
+
+#-[ VOLUMES
+volumes:
+  dockflare.data:
+  redis.data:
