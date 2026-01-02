@@ -17,7 +17,7 @@ services:
   # Init Only - Set Volume permissions
   dockflare-init:
     image: "alpine:${ALPINE_IMAGE_TAG}"
-    command: ["sh", "-c", "chown", "-R", "65532:65532", "/app/data"]
+    command: ["sh", "-c", "chown -R 65532:65532 /app/data"]
     networks:
       - "private"
     restart: "no"
