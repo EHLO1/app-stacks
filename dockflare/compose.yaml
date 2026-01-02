@@ -19,7 +19,7 @@ services:
     image: "alpine:${ALPINE_IMAGE_TAG}"
     command: ["sh", "-c", "chown", "-R", "65532:65532", "/app/data"]
     networks:
-      - private"
+      - "private"
     restart: "no"
     volumes:
       - "dockflare.data:/app/data"
