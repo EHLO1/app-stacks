@@ -29,7 +29,7 @@ services:
     image: "alplat/dockflare:${DOCKFLARE_IMAGE_TAG}"
     container_name: "dockflare"
     depends_on:
-      docker-socket-proxy:
+      socket-proxy:
         condition: "service_started"
       dockflare-init:
         condition: "service_completed_successfully"
