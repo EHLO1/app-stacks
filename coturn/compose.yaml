@@ -29,24 +29,24 @@ services:
     network_mode: "host"
     volumes:
       - "coturn.certs:/certs"
-    command: >
-      -n
-      --fingerprint
-      --lt-cred-mech
-      --external-ip=${EXTERNAL_IP}
-      --realm=turn.jjcasa.net
-      --listening-port=3478
-      --tls-listening-port=443
-      --min-port=50000
-      --max-port=60000
-      --cert=/certs/turn.jjcasa.net.crt
-      --pkey=/certs/turn.jjcasa.net.key
-      --user=${TURN_USER}:${TURN_PASSWORD}
-      --no-cli
-      --no-multicast-peers
-      --no-tlsv1
-      --no-tlsv1_1
-      --no-tlsv1_2
+    command:
+      - "-n"
+      - "--fingerprint"
+      - "--lt-cred-mech"
+      - "--external-ip=${EXTERNAL_IP}"
+      - "--realm=turn.jjcasa.net"
+      - "--listening-port=3478"
+      - "--tls-listening-port=443"
+      - "--min-port=50000"
+      - "--max-port=60000"
+      - "--cert=/certs/turn.jjcasa.net.crt"
+      - "--pkey=/certs/turn.jjcasa.net.key"
+      - "--user=${TURN_USER}:${TURN_PASSWORD}"
+      - "--no-cli"
+      - "--no-multicast-peers"
+      - "--no-tlsv1"
+      - "--no-tlsv1_1"
+      - "--no-tlsv1_2"
 
 #-[ VOLUMES
 volumes:
