@@ -44,8 +44,6 @@ services:
       - "--user=${TURN_USER}:${TURN_PASSWORD}"
       - "--no-cli"
       - "--no-multicast-peers"
-      - "--no-tlsv1"
-      - "--no-tlsv1_1"
       - "--no-tlsv1_2"
 
 #-[ VOLUMES
