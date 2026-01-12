@@ -35,6 +35,7 @@ services:
       - "--lt-cred-mech"
       - "--external-ip=${EXTERNAL_IP}"
       - "--realm=turn.jjcasa.net"
+      - "--listening-ip=0.0.0.0"
       - "--listening-port=3478"
       - "--tls-listening-port=443"
       - "--min-port=50000"
