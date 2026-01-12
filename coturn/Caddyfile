@@ -5,10 +5,10 @@
 
 turn.jjcasa.net {
     tls {
-        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
         # FORCE Let's Encrypt so the path is predictable
         issuer acme {
             dir https://acme-v02.api.letsencrypt.org/directory
+            dns cloudflare {env.CLOUDFLARE_API_TOKEN}
         }
     }
     respond "Certificate Manager"
