@@ -24,9 +24,11 @@ services:
   
   # Redis - Jk it's valkey
   redis:
-    image: "valkey:${VALKEY_IMAGE_TAG}" # 8.1-alpine
+    image: "valkey:${VALKEY_IMAGE_TAG}"
     container_name: "netbox-redis"
     command: ["valkey-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    networks:
+      - "private"
     volumes:
       - "redis.data:/data"
   redis-cache:
@@ -38,13 +40,16 @@ services:
 
   # NetBox - An Overwhelming, Unnecessary CMDB for a Home Lab Environment
   netbox: &netbox
-    image: "docker.io/netboxcommunity/netbox:${NETBOX_IMAGE_TAG}"  # VERSION-v4.4-3.4.1
+    image: "docker.io/netboxcommunity/netbox:${NETBOX_IMAGE_TAG}"
     container_name: "netbox"
     depends_on:
-      - "postgres"
-      - "redis"
-      - "redis-cache"
+      - "netbox-postgres"
+      - "netbox-redis"
+      - "netbox-redis-cache"
     env_file: "./.env"
+    networks:
+      - "cloudflare"
+      - "private"
     user: "unit:root"
     volumes:
       - "netbox.config:/etc/netbox/config:z,ro"
@@ -56,6 +61,16 @@ services:
       - "netbox"
     command: ["/opt/netbox/venv/bin/python", "/opt/netbox/netbox/manage.py", "rqworker"]
 
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  private:
+    driver: "bridge"
+
+#-[ VOLUMES
 volumes:
   postgres.data:
   redis.data:
