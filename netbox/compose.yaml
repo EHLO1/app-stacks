@@ -1,0 +1,64 @@
+#-[ PROJECT NAME
+name: "netbox"
+
+#-[ SERVICES
+services:
+  # Postgres - SQL Database
+  postgres:
+    image: "postgres:${POSTGRES_IMAGE_TAG}"
+    container_name: "netbox-postgres"
+    environment:
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+      - "POSTGRES_DB=${POSTGRES_DB}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-h", "localhost", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: "5s"
+      timeout: "5s"
+      retries: "10"
+    networks:
+      - "private"
+    restart: "unless-stopped"
+    volumes:
+      - "postgres.data:/var/lib/postgresql/data"
+  
+  # Redis - Jk it's valkey
+  redis:
+    image: "valkey:${VALKEY_IMAGE_TAG}" # 8.1-alpine
+    container_name: "netbox-redis"
+    command: ["valkey-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - "redis.data:/data"
+  redis-cache:
+    image: "valkey:${VALKEY_IMAGE_TAG}"
+    container_name: "netbox-redis-cache"
+    command: ["valkey-server", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - "redis-cache.data:/data"
+
+  # NetBox - An Overwhelming, Unnecessary CMDB for a Home Lab Environment
+  netbox: &netbox
+    image: "docker.io/netboxcommunity/netbox:${NETBOX_IMAGE_TAG}"  # VERSION-v4.4-3.4.1
+    container_name: "netbox"
+    depends_on:
+      - "postgres"
+      - "redis"
+      - "redis-cache"
+    env_file: "./.env"
+    user: "unit:root"
+    volumes:
+      - "netbox.config:/etc/netbox/config:z,ro"
+      - "netbox.data:/opt/netbox/netbox"
+
+  netbox-worker-1:
+    <<: *netbox
+    depends_on:
+      - "netbox"
+    command: ["/opt/netbox/venv/bin/python", "/opt/netbox/netbox/manage.py", "rqworker"]
+
+volumes:
+  postgres.data:
+  redis.data:
+  redis-cache.data:
+  netbox.config:
+  netbox.data:

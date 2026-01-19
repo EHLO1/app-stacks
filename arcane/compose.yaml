@@ -6,7 +6,7 @@ services:
   # Postgres - SQL Database
   postgres:
     image: "postgres:${POSTGRES_IMAGE_TAG}"
-    container_name: "postgres"
+    container_name: "arcane-postgres"
     environment:
       - "POSTGRES_USER=${POSTGRES_USER}"
       - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
