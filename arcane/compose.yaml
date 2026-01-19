@@ -1,0 +1,52 @@
+#-[ PROJECT NAME
+name: "arcane"
+
+#-[ SERVICES
+services:
+  # Postgres - SQL Database
+  postgres:
+    image: "postgres:${POSTGRES_IMAGE_TAG}"
+    container_name: "postgres"
+    environment:
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+      - "POSTGRES_DB=${POSTGRES_DB}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-h", "localhost", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: "5s"
+      timeout: "5s"
+      retries: "10"
+    networks:
+      - "private"
+    restart: "unless-stopped"
+    volumes:
+      - "postgres.data:/var/lib/postgresql/data"
+
+  # Arcane - Docker Management Console https://getarcane.app/
+  arcane:
+    image: "ghcr.io/getarcaneapp/arcane:${ARCANE_IMAGE_TAG}"
+    container_name: "arcane"
+    env_file: "./.env"
+    networks:
+      - "cloudflare"
+      - "private"
+    restart: "unless-stopped"
+    volumes:
+      - "arcane.data:/app/data"
+      # Docker Socket is currently REQUIRED!
+      # I am not a fan, but, it's on their near-future roadmap to allow for socket proxies.      
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+#-[ NETWORKS
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  private:
+    driver: "bridge"
+
+#-[ VOLUMES
+volumes:
+  postgres.data:
+  arcane.data:
