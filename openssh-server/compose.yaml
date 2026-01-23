@@ -1,0 +1,16 @@
+#-[ PROJECT NAME
+name: "openssh-server"
+
+#-[ SERVICES
+services:
+  # OpenSSH Server - Using for Backups
+  openssh-server:
+    image: "lscr.io/linuxserver/openssh-server:${OPENSSH_SERVER_IMAGE_TAG}"
+    container_name: "openssh-server"
+    env_file: "./.env"
+    ports:
+      - "2222:2222"
+    restart: "unless-stopped"
+    volumes:
+      - "/var/lib/docker/volumes:/backups/docker-volumes:ro"
+      - "/srv/docker/backups/postgres:/backups/postgres:ro"
