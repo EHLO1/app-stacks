@@ -24,7 +24,7 @@ services:
   
   # Redis - Jk it's valkey
   redis:
-    image: "valkey:${VALKEY_IMAGE_TAG}"
+    image: "valkey/valkey:${VALKEY_IMAGE_TAG}"
     container_name: "netbox-redis"
     command: ["valkey-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     networks:
@@ -32,7 +32,7 @@ services:
     volumes:
       - "redis.data:/data"
   redis-cache:
-    image: "valkey:${VALKEY_IMAGE_TAG}"
+    image: "valkey/valkey:${VALKEY_IMAGE_TAG}"
     container_name: "netbox-redis-cache"
     command: ["valkey-server", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
@@ -43,20 +43,24 @@ services:
     image: "docker.io/netboxcommunity/netbox:${NETBOX_IMAGE_TAG}"
     container_name: "netbox"
     depends_on:
-      - "netbox-postgres"
-      - "netbox-redis"
-      - "netbox-redis-cache"
+      - "postgres"
+      - "redis"
+      - "redis-cache"
     env_file: "./.env"
     networks:
       - "cloudflare"
       - "private"
     user: "unit:root"
     volumes:
-      - "netbox.config:/etc/netbox/config:z,ro"
-      - "netbox.data:/opt/netbox/netbox"
+      - "netbox.config:/etc/netbox/config:rw"
+      - "netbox.media:/opt/netbox/netbox/media:rw"
+      - "netbox.reports:/opt/netbox/netbox/reports:rw"
+      - "netbox.scripts:/opt/netbox/netbox/scripts:rw"
 
   netbox-worker-1:
     <<: *netbox
+    image: "docker.io/netboxcommunity/netbox:${NETBOX_IMAGE_TAG}"
+    container_name: "netbox-worker-1"
     depends_on:
       - "netbox"
     command: ["/opt/netbox/venv/bin/python", "/opt/netbox/netbox/manage.py", "rqworker"]
@@ -76,4 +80,6 @@ volumes:
   redis.data:
   redis-cache.data:
   netbox.config:
-  netbox.data:
+  netbox.media:
+  netbox.reports:
+  netbox.scripts:

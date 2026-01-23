@@ -18,6 +18,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - zerobyte.data:/var/lib/zerobyte
+      - ~/.config/rclone:/root/.config/rclone
 
 #-[ NETWORKS
 networks:
