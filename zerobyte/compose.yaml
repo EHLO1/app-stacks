@@ -8,6 +8,8 @@ services:
     container_name: "zerobyte"
     cap_add:
       - "SYS_ADMIN"
+    devices:
+      - "/dev/fuse:/dev/fuse"
     environment:
       - "TZ=America/Chicago"
     networks:
