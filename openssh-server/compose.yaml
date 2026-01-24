@@ -3,7 +3,7 @@ name: "openssh-server"
 
 #-[ SERVICES
 services:
-  # OpenSSH Server - Using for Backups
+  # OpenSSH Server - Useful for controlled directory mount
   openssh-server:
     image: "lscr.io/linuxserver/openssh-server:${OPENSSH_SERVER_IMAGE_TAG}"
     container_name: "openssh-server"

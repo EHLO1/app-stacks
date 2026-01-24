@@ -1,0 +1,16 @@
+#-[ PROJECT NAME
+name: "samba"
+
+#-[ SERVICES
+services:
+  samba:
+    image: "dockurr/samba:${SAMBA_IMAGE_TAG}"
+    container_name: "samba"
+    env_file: "./.env"
+    ports:
+      - "445:445"
+    restart: "unless-stopped"
+    volumes:
+      - "/var/lib/docker/volumes:/storage/backups/docker-volumes:ro"
+      - "/srv/docker/backups/postgres:/storage/backups/postgres:ro"
+      - "./smb.conf:/etc/samba/smb.conf:ro"
