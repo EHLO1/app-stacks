@@ -15,7 +15,12 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
       - "zerobyte.data:/var/lib/zerobyte"
       - "~/.config/rclone:/root/.config/rclone"
-      - "/mnt/backups:/remote"
+      - type: "bind"
+        source: "/mnt/backups"
+        target: "/remote"
+        read_only: true
+        bind:
+          propagation: "shared"
 
 #-[ NETWORKS
 networks:
