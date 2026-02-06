@@ -1,15 +1,4 @@
-# Multi-stage build to add dependencies to n8n runners
-# This works around the issue where n8nio/runners v2.1.0+ removed apk
-
-# Stage 1: Build dependencies in Alpine (must match n8nio/runners base version)
-FROM alpine:3.23 AS builder
-
-RUN apk add --no-cache \
-    nss \
-    ca-certificates \
-    openssh-client
-
-# Stage 2: Copy to runners image
+# Build to add dependencies to n8n runners
 FROM n8nio/runners:latest
 
 USER root

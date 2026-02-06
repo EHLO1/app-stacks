@@ -52,8 +52,7 @@ ENV PATH="/usr/local/lib/docker/cli-plugins:${PATH}"
 
 # Copy application files
 COPY autoscaler/autoscaler.py .
-COPY docker-compose.yml .
-COPY Dockerfile .
+COPY compose.yaml .
 
 # Specify the command to run on container start
 CMD ["python", "-u", "autoscaler.py"]

@@ -4,10 +4,13 @@ name: "n8n"
 #-[ ANCHORS
 # Main and Worker base configuration for n8n
 x-n8n: &service-n8n
-  image: "n8n.io/n8n:${N8N_IMAGE_TAG}"
+  image: "docker.n8n.io/n8nio/n8n:${N8N_IMAGE_TAG}"
   env_file: "./.env"
   user: "root:root"
   restart: "unless-stopped"
+  networks:
+    - "cloudflare"
+    - "private"
 
 # Task runner base configuration for n8n
 x-task-runner: &service-task-runner
@@ -16,12 +19,13 @@ x-task-runner: &service-task-runner
     dockerfile: "./runner/Dockerfile"
   environment:
     - "N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}"
+    - "N8N_RUNNERS_TASK_BROKER_URI=${N8N_RUNNERS_TASK_BROKER_URI}"
     - "N8N_RUNNERS_MAX_CONCURRENCY=${N8N_RUNNERS_MAX_CONCURRENCY}"
     - "N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=${N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT}"
     - "N8N_RUNNERS_INSECURE_MODE=${N8N_RUNNERS_INSECURE_MODE}"
     - "N8N_RUNNERS_LAUNCHER_LOG_LEVEL=${N8N_RUNNERS_LAUNCHER_LOG_LEVEL}"
   networks:
-    - "caddy_gateway"
+    - "cloudflare"
     - "private"
   restart: "unless-stopped"
   healthcheck:
@@ -80,9 +84,6 @@ services:
       timeout: "5s"
       retries: "10"
       start_period: "60s"
-    networks:
-      - "caddy_gateway"
-      - "private"
     volumes:
       - "n8n.main:/n8n"
 
@@ -110,8 +111,6 @@ services:
       timeout: "5s"
       retries: "10"
       start_period: "30s"
-    networks:
-      - "private"
     volumes:
       - "n8n.webhook:/n8n"
 
@@ -133,8 +132,6 @@ services:
       retries: "10"
       start_period: "30s"
     stop_grace_period: "5m"
-    networks:
-      - "private"
     volumes:
       - "n8n.main:/n8n"
 
@@ -145,6 +142,13 @@ services:
     depends_on:
       n8n-worker:
         condition: "service_healthy"
+    environment:
+      - "N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}"
+      - "N8N_RUNNERS_TASK_BROKER_URI=http://n8n-worker:5679"
+      - "N8N_RUNNERS_MAX_CONCURRENCY=${N8N_RUNNERS_MAX_CONCURRENCY}"
+      - "N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=${N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT}"
+      - "N8N_RUNNERS_INSECURE_MODE=${N8N_RUNNERS_INSECURE_MODE}"
+      - "N8N_RUNNERS_LAUNCHER_LOG_LEVEL=${N8N_RUNNERS_LAUNCHER_LOG_LEVEL}"
 
   # Custom Container - Used to notify n8n-autoscaler
   redis-monitor:
@@ -211,7 +215,7 @@ services:
 #-[ NETWORKS
 networks:
   # Public / External Network (Proxied by Caddy)
-  caddy_gateway:
+  cloudflare:
     external: true
   # Storage / Backend Network (Not Accessible Externally)
   private:
