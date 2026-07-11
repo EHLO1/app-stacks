@@ -1,0 +1,26 @@
+#-[ PROJECT NAME
+name: "caddy-certs"
+
+#-[ SERVICES
+services:
+  # Caddy - Abused for Certificates
+  caddy:
+    build:
+      context: "."
+      dockerfile: "./caddy/Dockerfile"
+    container_name: "caddy"
+    environment:
+      - BASE_URL=${BASE_URL}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - SSL_EMAIL=${SSL_EMAIL}
+    restart: "unless-stopped"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy.data:/data
+      - caddy.certs:/certs
+
+volumes:
+  caddy.data:
+    name: caddy.data
+  caddy.certs:
+    name: caddy.certs
