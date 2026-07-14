@@ -1,0 +1,17 @@
+{
+    admin localhost:2019
+}
+
+:2020 {
+    @authorized {
+        header X-Caddy-Token {env.CADDY_API_TOKEN}
+    }
+
+    handle @authorized {
+        reverse_proxy localhost:2019 {
+            header_up Host localhost:2019
+        }
+    }
+
+    respond "Unauthorized" 403
+}

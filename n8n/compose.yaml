@@ -1,54 +1,170 @@
 #-[ PROJECT NAME
 name: "n8n"
 
-#-[ SERVICES
-services:
-  # Postgres - SQL Database
-  postgres:
-    image: "postgres:${POSTGRES_IMAGE_TAG}"
-    container_name: "postgres"
-    environment:
-      - "POSTGRES_USER=${POSTGRES_USER}"
-      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
-      - "POSTGRES_DB=${POSTGRES_DB}"
-      - "POSTGRES_NON_ROOT_USER=${POSTGRES_NON_ROOT_USER}"
-      - "POSTGRES_NON_ROOT_PASSWORD=${POSTGRES_NON_ROOT_PASSWORD}"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-h", "localhost", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
-      interval: "5s"
-      timeout: "5s"
-      retries: "10"
-    networks:
-      - "private"
-    restart: "unless-stopped"
-    volumes:
-      - "postgres.data:/var/lib/postgresql/data"
-      - "./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh"
-  
-  # n8n - No-Code/Low-Code Workflow Automation
-  n8n:
-    image: "docker.n8n.io/n8nio/n8n:${N8N_IMAGE_TAG}"
-    container_name: "n8n"
-    depends_on:
-      - "postgres"
-    env_file: "./.env"
-    networks:
-      - "cloudflare"
-      - "private"
-    restart: "unless-stopped"
-    volumes:
-      - "n8n.data:/home/node"
+#-[ ANCHORS
+# Main and Worker base configuration for n8n
+x-n8n: &service-n8n
+  image: docker.n8n.io/n8nio/n8n:${N8N_IMAGE_TAG:-latest}
+  environment:
+    - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Chicago}
+    - LOG_LEVEL=${LOG_LEVEL:-info}
+    - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+    - N8N_HOST=${N8N_HOST:-localhost}
+    - N8N_PORT=${N8N_PORT:-5678}
+    - N8N_LISTEN_ADDRESS=${N8N_LISTEN_ADDRESS:-0.0.0.0}
+    - N8N_PROXY_HOPS=${N8N_PROXY_HOPS:-1}
+    - WEBHOOK_URL=${N8N_PROTOCOL}://${N8N_HOST}
+    - N8N_PUBLIC_API_SWAGGERUI_DISABLED=${N8N_PUBLIC_API_SWAGGERUI_DISABLED:-false}
+    - DB_TYPE=${DB_TYPE:-postgresdb}
+    - DB_POSTGRESDB_HOST=${DB_POSTGRESDB_HOST:-n8n-postgres}
+    - DB_POSTGRESDB_PORT=${DB_POSTGRESDB_PORT:-5432}
+    - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-n8n}
+    - DB_POSTGRESDB_USER=${POSTGRES_USER}
+    - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    - N8N_RUNNERS_MODE=${N8N_RUNNERS_MODE:-external}
+    - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+    - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=${N8N_RUNNERS_BROKER_LISTEN_ADDRESS:-0.0.0.0}
+    - N8N_RUNNERS_INSECURE_MODE=${N8N_RUNNERS_INSECURE_MODE:-false}
+    - N8N_PYTHON_ENABLED=${N8N_PYTHON_ENABLED:-true}
+    - N8N_NATIVE_PYTHON_RUNNER=${N8N_NATIVE_PYTHON_RUNNER:-true}
+    - N8N_DIAGNOSTICS_ENABLED=${N8N_DIAGNOSTICS_ENABLED:-true}
+    - N8N_METRICS=${N8N_METRICS:-true}
+    - N8N_USER_MANAGEMENT_JWT_SECRET=${N8N_USER_MANAGEMENT_JWT_SECRET}
+    - N8N_DATA_TABLES_MAX_SIZE_BYTES=${N8N_DATA_TABLES_MAX_SIZE_BYTES:-1048576000} # 1GB
+    - N8N_BLOCK_ENV_ACCESS_IN_NODE=${N8N_BLOCK_ENV_ACCESS_IN_NODE:-false}
+    - N8N_DEFAULT_BINARY_DATA_MODE=${N8N_DEFAULT_BINARY_DATA_MODE:-database}
+    - N8N_RESTRICT_FILE_ACCESS_TO=${N8N_RESTRICT_FILE_ACCESS_TO:-/home/node/.n8n-files}
+    - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS:-false}
+    - N8N_VERSION_NOTIFICATIONS_ENABLED=${N8N_VERSION_NOTIFICATIONS_ENABLED:-true}
+    - N8N_COMMUNITY_PACKAGES_ENABLED=${N8N_COMMUNITY_PACKAGES_ENABLED:-true}
+    - N8N_PERSONALIZATION_ENABLED=${N8N_PERSONALIZATION_ENABLED:-false}
+    - N8N_HIRING_BANNER_ENABLED=${N8N_HIRING_BANNER_ENABLED:-false}
+    - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+    - EXECUTIONS_MODE=${EXECUTIONS_MODE:-queue}
+    - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=${OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS:-true}
+    - QUEUE_BULL_REDIS_HOST=${VALKEY_HOST:-n8n-valkey}
+    - QUEUE_BULL_REDIS_PORT=${VALKEY_PORT:-6379}
+    - QUEUE_HEALTH_CHECK_ACTIVE=${QUEUE_HEALTH_CHECK_ACTIVE:-true}
+    - N8N_WORKER_SERVER_ADDRESS=${N8N_WORKER_SERVER_ADDRESS}
+  networks:
+    - n8n-backend
+    - cloudflare
 
-#-[ NETWORKS
+# Task runner base configuration for n8n
+x-task-runner: &service-task-runner
+  build:
+    context: .
+    dockerfile: ./runner/Dockerfile
+    args:
+      N8N_RUNNERS_IMAGE_TAG: ${N8N_RUNNERS_IMAGE_TAG:-latest}
+  environment:
+    - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+    - N8N_RUNNERS_TASK_BROKER_URI=${N8N_RUNNERS_TASK_BROKER_URI}
+    - N8N_RUNNERS_MAX_CONCURRENCY=${N8N_RUNNERS_MAX_CONCURRENCY:-10}
+    - N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT=${N8N_RUNNERS_AUTO_SHUTDOWN_TIMEOUT:-15}
+    - N8N_RUNNERS_INSECURE_MODE=${N8N_RUNNERS_INSECURE_MODE:-false}
+    - N8N_RUNNERS_LAUNCHER_LOG_LEVEL=${N8N_RUNNERS_LAUNCHER_LOG_LEVEL:-info}
+  networks:
+    - backend
+  healthcheck:
+    test: ["CMD-SHELL", "pgrep -f 'node.*runner' || exit 1"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 15s
+
+services:
+  # n8n (main) - Low-Code / No-Code Workflow Automation
+  n8n:
+    <<: *service-n8n
+    container_name: n8n-main
+    depends_on:
+      n8n-postgres:
+        condition: service_healthy
+      n8n-valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    volumes:
+      - n8n.data:/n8n
+
+  # n8n (worker)
+  n8n-worker:
+    <<: *service-n8n
+    container_name: n8n-worker
+    command: worker
+    depends_on:
+      n8n:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    stop_grace_period: 5m
+    restart: unless-stopped
+    volumes:
+      - n8n.data:/n8n
+
+  # n8n (task runner)
+  n8n-runner:
+    <<: *service-task-runner
+    container_name: n8n-runner
+    depends_on:
+      n8n-worker:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Postgres - SQL Database
+  n8n-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG:-17-alpine}
+    container_name: n8n-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-n8n}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-n8n}", "-U", "${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - n8n-backend
+    restart: unless-stopped
+    volumes:
+      - n8n-postgres.data:/var/lib/postgresql/data
+
+  # Valkey - Key/Value Store Forked from Redis
+  n8n-valkey:
+    image: valkey/valkey:${VALKEY_IMAGE_TAG:-9-alpine}
+    container_name: n8n-valkey
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+    networks:
+      - n8n-backend
+    restart: unless-stopped
+    volumes:
+      - n8n-valkey.data:/data
+
 networks:
-  # Public / External Network (Cloudflare Tunnel)
+  n8n-backend:
+    driver: "bridge"
+    name: n8n-backend
   cloudflare:
     external: true
-  # Storage / Backend Network (Not Accessible Externally)
-  private:
-    driver: "bridge"
 
-#-[ VOLUMES
 volumes:
-  postgres.data:
   n8n.data:
+    name: n8n.data
+  n8n-postgres.data:
+    name: n8n-postgres.data
+  n8n-valkey.data:
+    name: n8n-valkey.data

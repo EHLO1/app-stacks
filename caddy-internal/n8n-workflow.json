@@ -1,0 +1,165 @@
+{
+  "name": "Caddy Dynamic Config Sync",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        160
+      ],
+      "id": "6801ac8a-eed5-410c-86e6-d58de99dc9ba",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "5S2wcSuZMXkwDvUP",
+          "mode": "list",
+          "cachedResultName": "Internal Sites",
+          "cachedResultUrl": "/projects/DcNMDqyfR57F0FII/datatables/5S2wcSuZMXkwDvUP"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "29398247-9b80-4d3d-9ea2-e55b2c384cc6",
+      "name": "Get Rows from Internal Sites (n8n DB)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Define the static Gatekeeper block\nconst gatekeeperConfig = `\n{\n    admin localhost:2019\n}\n\n:2020 {\n    @authorized {\n        header X-Caddy-Token \"fbaf07f9fd9578c757a9a7007b5c3eda8f1e53a5a505ae55b9b70a4701b9b705\"\n    }\n    handle @authorized {\n        reverse_proxy localhost:2019 {\n            header_up Host localhost:2019\n        }\n    }\n    respond \"Unauthorized\" 403\n}\n`;\n\n// Start building the file\nlet caddyfile = gatekeeperConfig + \"\\n\";\n\n// Loop through your DB results and append sites\nfor (const item of $input.all()) {\n   const site = item.json;\n\n// -- LOGIC: Handle HTTPS Backends --\n  let skipVerification = \"\";\n\n  if (site.targetScheme === 'https') {\n      // Since internal HTTPS services (like Proxmox) usually have self-signed certs,\n      // we must explicitly tell Caddy to trust them.\n      skipVerification = `\n      transport http {\n          tls\n          tls_insecure_skip_verify\n      }`;\n  }\n\n  caddyfile += `\n  ${site.name} {\n    reverse_proxy ${site.target}:${site.targetPort} {\n      ${skipVerification}\n    }\n    tls { \n      dns cloudflare {env.CLOUDFLARE_API_TOKEN}\n    }\n  }\\n`;\n}\n\nreturn [{ json: { config: caddyfile } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "07c687db-4f60-45fc-9c9c-a294a178ae80",
+      "name": "Generate Caddyfile"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "caddy-config-sync",
+        "options": {
+          "responseData": "Call me, maybe?"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "19376c57-8c91-4670-9e25-9ed95b616afa",
+      "name": "Webhook - Caddy Init",
+      "webhookId": "6b25a10a-f4e6-408e-b73d-b380443cc634"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://komodo-app2.svc.jjcasa.net:2020/load",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/caddyfile"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/caddyfile",
+        "body": "={{ $json.config }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "5558f62a-0527-474b-9896-9baeb5155f94",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "lDWfMtGi8RnjiEHB",
+          "name": "caddy-internal"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Rows from Internal Sites (n8n DB)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Rows from Internal Sites (n8n DB)": {
+      "main": [
+        [
+          {
+            "node": "Generate Caddyfile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Caddyfile": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Caddy Init": {
+      "main": [
+        [
+          {
+            "node": "Get Rows from Internal Sites (n8n DB)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "07d23700-0d3c-4ec7-9008-192b9a4c6aca",
+  "meta": {
+    "instanceId": "fa70b6a389b3f3dccfc9eb0c05dd952c596dc4dd030ce2b5b957fedbe8068a62"
+  },
+  "nodeGroups": [],
+  "id": "5oVy__sK13twXMNgkXh4x",
+  "tags": []
+}

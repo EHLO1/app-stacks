@@ -1,0 +1,38 @@
+#-[ PROJECT NAME
+name: "garage"
+
+services:
+  # Garage - Local S3 Data Storage
+  garage:
+    image: dxflrs/garage:${GARAGE_IMAGE_TAG:-v2.3.0}
+    container_name: garage
+    command: /garage server --single-node
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+    environment:
+      - GARAGE_DEFAULT_BUCKET=${GARAGE_DEFAULT_BUCKET}
+      - GARAGE_DEFAULT_ACCESS_KEY=${GARAGE_DEFAULT_ACCESS_KEY}
+      - GARAGE_DEFAULT_SECRET_KEY=${GARAGE_DEFAULT_SECRET_KEY}
+      - GARAGE_ADMIN_TOKEN=${GARAGE_ADMIN_TOKEN}
+      - GARAGE_RPC_SECRET=${GARAGE_RPC_SECRET}
+    networks:
+      - garage-frontend
+    restart: unless-stopped
+    volumes:
+      - ./config.toml:/etc/garage.toml:ro
+      - garage.meta:/var/lib/garage/meta
+      - garage.data:/var/lib/garage/data
+
+networks:
+  garage-frontend:
+    driver: bridge
+    name: garage-frontend
+
+volumes:
+  garage.meta:
+    name: garage.meta
+  garage.data:
+    name: garage.data
