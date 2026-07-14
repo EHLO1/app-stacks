@@ -1,0 +1,84 @@
+#-[ PROJECT NAME
+name: chatto
+
+services:
+  chatto-nats:
+    image: nats:${NATS_IMAGE_TAG:-latest}
+    container_name: chatto-nats
+    command: ["--jetstream", "--store_dir=/data", "--auth=${NATS_TOKEN}"]
+    healthcheck:
+      test: ["CMD", "nats-server", "--help"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    networks:
+      - chatto-backend
+    restart: unless-stopped
+    volumes:
+      - chatto-nats.data:/data
+
+  chatto-livekit:
+    image: livekit/livekit-server:${LIVEKIT_IMAGE_TAG:-latest}
+    container_name: chatto-livekit
+    command:
+      - --config
+      - /etc/livekit.yaml
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7880"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    ports:
+      - "50100-50200:50100-50200/udp"  # WebRTC media (UDP, must be direct)
+      - "7881:7881/tcp"  # WebRTC media fallback when UDP is unavailable
+      - "3478:3478/udp"  # TURN/STUN relay for NAT traversal
+    volumes:
+      - ${LIVEKIT_CONFIG_FILE:-./livekit.yaml}:/etc/livekit.yaml:ro
+
+  chatto:
+    image: ghcr.io/chattocorp/chatto:${CHATTO_IMAGE_TAG:-latest}
+    env_file: .env
+    environment:
+      PUID: "${PUID:-1000}"
+      PGID: "${PGID:-1000}"
+    depends_on:
+      nats:
+        condition: service_healthy
+      livekit:
+        condition: service_healthy
+    networks:
+      - chatto-backend
+      - chatto-cloudflare
+
+  chatto-cloudflared:
+    image: cloudflare/cloudflared:${CLOUDFLARED_IMAGE_TAG:-latest}
+    container_name: chatto-cloudflared
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CHATTO_CLOUDFLARE_TUNNEL_TOKEN}
+    healthcheck:
+      test: ["CMD", "cloudflared", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+        max-file: 10
+    networks:
+      - chatto-cloudflare
+    restart: unless-stopped
+
+networks:
+  chatto-backend:
+    driver: bridge
+    name: chatto-backend
+  chatto-cloudflare:
+    driver: bridge
+    name: chatto-cloudflare
+
+volumes:
+  chatto-nats.data:
+    name: chatto-nats.data

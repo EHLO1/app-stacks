@@ -1,0 +1,39 @@
+# Either use TUNNEL_TOKEN and input the secret in plaintext or
+# Create the docker secret first.
+# Deploy mode is global, to ensure an instance of cloudflared is deployed to each worker.
+# Using the same tunnel token allows Cloudflare to load balance at the front, where swarm
+# will handle any routing in the back.
+version: '3.8'
+
+services:
+  cloudflare:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN_FILE: /run/secrets/cf_tunnel_token
+    secrets:
+      - cf_tunnel_token
+    networks:
+      - cloudflare
+    deploy:
+      mode: global
+      placement: 
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+
+networks:
+  cloudflare:
+    driver: overlay
+    name: cloudflare
+    attachable: true
+
+secrets:
+  cf_tunnel_token:
+    external: true

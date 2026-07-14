@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Postgres - SQL Database
+  postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG:-17-alpine}
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        order: stop-first
+        failure_action: rollback
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - outline-backend
+    volumes:
+      - postgres.data:/var/lib/postgresql/data
+
+  # Valkey - Key/Value Store
+  valkey:
+    image: valkey/valkey:${VALKEY_IMAGE_TAG:-9-alpine}
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        order: stop-first
+        failure_action: rollback
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+    networks:
+      - outline-backend
+    volumes:
+      - valkey.data:/data
+
+  # Outline - Team Knowledge Base & Documentation Platform
+  outline:
+    image: docker.getoutline.com/outlinewiki/outline:${OUTLINE_IMAGE_TAG:-latest}
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    env_file: ./.env
+    networks:
+      - outline-backend
+      - cloudflare
+    volumes:
+    - outline.data:/var/lib/outline/data
+
+networks:
+  outline-backend:
+    driver: overlay
+    name: outline-backend
+  cloudflare:
+    external: true
+
+volumes:
+  postgres.data:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=10.0.30.2,rw,noatime,nolock,tcp,timeo=14"
+      device: ":/secondary-pool/ac1-cluster/outline-postgres-data"
+  valkey.data:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=10.0.30.2,rw,noatime,nolock,tcp,timeo=14"
+      device: ":/secondary-pool/ac1-cluster/outline-valkey-data"
+  outline.data:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=10.0.30.2,rw,noatime,nolock,tcp,timeo=14"
+      device: ":/secondary-pool/ac1-cluster/outline-data"
