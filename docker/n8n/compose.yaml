@@ -65,7 +65,7 @@ x-task-runner: &service-task-runner
     - N8N_RUNNERS_INSECURE_MODE=${N8N_RUNNERS_INSECURE_MODE:-false}
     - N8N_RUNNERS_LAUNCHER_LOG_LEVEL=${N8N_RUNNERS_LAUNCHER_LOG_LEVEL:-info}
   networks:
-    - backend
+    - n8n-backend
   healthcheck:
     test: ["CMD-SHELL", "pgrep -f 'node.*runner' || exit 1"]
     interval: 10s
@@ -77,14 +77,14 @@ services:
   # n8n (main) - Low-Code / No-Code Workflow Automation
   n8n:
     <<: *service-n8n
-    container_name: n8n-main
+    container_name: n8n
     depends_on:
       n8n-postgres:
         condition: service_healthy
       n8n-valkey:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:5678/healthz"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -102,7 +102,7 @@ services:
       n8n:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:5678/healthz"]
       interval: 10s
       timeout: 5s
       retries: 10
