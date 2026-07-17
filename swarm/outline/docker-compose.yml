@@ -81,13 +81,13 @@ volumes:
     driver_opts:
       type: "nfs"
       o: "addr=10.0.30.2,rw,noatime,nolock,tcp,timeo=14"
-      device: ":/secondary-pool/ac1-cluster/outline-postgres-data"
+      device: ":/secondary-pool/ac1-cluster/outline-postgres"
   valkey.data:
     driver: local
     driver_opts:
       type: "nfs"
       o: "addr=10.0.30.2,rw,noatime,nolock,tcp,timeo=14"
-      device: ":/secondary-pool/ac1-cluster/outline-valkey-data"
+      device: ":/secondary-pool/ac1-cluster/outline-valkey"
   outline.data:
     driver: local
     driver_opts:
