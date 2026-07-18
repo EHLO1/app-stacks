@@ -4,9 +4,9 @@ name: "komodo"
 #-[ SERVICES
 services:
    # Postgres - SQL Database
-  postgres:
+  komodo-postgres:
     image: ghcr.io/ferretdb/postgres-documentdb:${POSTGRES_IMAGE_TAG}
-    container_name: "postgres"
+    container_name: komodo-postgres
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -14,53 +14,59 @@ services:
     labels:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     networks:
-      - "private"
-    restart: "unless-stopped"
+      - komodo-backend
+    restart: unless-stopped
     volumes:
-      - "postgres-data:/var/lib/postgresql/data"
+      - komodo-postgres.data:/var/lib/postgresql/data
 
-  # FerretDB - MongoDB Adapter for Postgres
-  ferretdb:
+  # FerretDB - MongoDB Adapter for Postgres With DocumentDB
+  komodo-ferretdb:
     image: ghcr.io/ferretdb/ferretdb:${FERRETDB_IMAGE_TAG}
-    container_name: "ferretdb"
+    container_name: komodo-ferretdb
     depends_on:
-      - "postgres"
+      - komodo-postgres
     environment:
       - FERRETDB_POSTGRESQL_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
     labels:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     networks:
-      - "private"
-    restart: "unless-stopped"
+      - komodo-backend
+    restart: unless-stopped
     volumes:
-      - "ferretdb-state:/state"
+      - komodo-ferretdb.state:/state
 
   # Komodo - Docker Application Stack Build and Deploy Utility
-  komodo-core:
+  komodo:
     image: ghcr.io/moghtech/komodo-core:${KOMODO_IMAGE_TAG}
-    container_name: "komodo-core"
+    container_name: komodo
+    init: true
     depends_on:
-      - "ferretdb"
-    env_file: "./.env"
+      - komodo-ferretdb
+    env_file: ./.env
     labels:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     networks:
-      - "cloudflare"
-      - "private"
-    restart: "unless-stopped"
+      - mbox-cloudflare
+      - komodo-backend
+    ports:
+      - 9120:9120
+    restart: unless-stopped
     volumes:
-      - "./data/komodo/backups:/backups"
+      - komodo.backups:/backups
+      - komodo.keys:/config/keys
 
 #-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
+  mbox-cloudflare:
     external: true
   # Storage / Backend Network (Not Accessible Externally)
-  private:
+  komodo-backend:
     driver: "bridge"
 
 #-[ VOLUMES
 volumes:
-  postgres-data:
-  ferretdb-state:
+  komodo-postgres.data:
+  komodo-ferretdb.state:
+  komodo.backups:
+  komodo.keys:
