@@ -26,7 +26,7 @@ services:
     depends_on:
       - komodo-postgres
     environment:
-      - FERRETDB_POSTGRESQL_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@komodo-postgres:5432/${POSTGRES_DB}"
+      - FERRETDB_POSTGRESQL_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@komodo-postgres:5432/${POSTGRES_DB}
     labels:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     networks:
