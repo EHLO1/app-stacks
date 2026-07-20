@@ -1,18 +1,18 @@
 #-[ PROJECT NAME
-name: "bentopdf"
+name: bentopdf
+# https://www.bentopdf.com/
+# https://github.com/alam00000/bentopdf
 
-#-[ SERVICES
 services:
    # BentoPDF - Free and FOSS PDF Tools
   bentopdf:
-    image: "ghcr.io/alam00000/bentopdf:latest"
-    container_name: "bentopdf"
+    image: ghcr.io/alam00000/bentopdf:${BENTOPDF_IMAGE_TAG:-latest}
+    container_name: bentopdf
     networks:
-      - "cloudflare"
-    restart: "unless-stopped"
+      - cloudflare-ingress
+    restart: unless-stopped
 
-#-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
+  cloudflare-ingress:
     external: true

@@ -1,13 +1,12 @@
 #-[ PROJECT NAME
-name: "cloudflare-tunnel"
+name: cloudflare-tunnel
 
-#-[ SERVICES
 services:
   # Cloudflare Tunnel
-  cloudflared:
+  cloudflare:
     image: cloudflare/cloudflared:${CLOUDFLARE_IMAGE_TAG}
-    container_name: "cloudflare-tunnel"
-    command: "tunnel run"
+    container_name: cloudflare
+    command: tunnel run
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     healthcheck:
