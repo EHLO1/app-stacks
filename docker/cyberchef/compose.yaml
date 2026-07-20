@@ -1,17 +1,19 @@
 #-[ PROJECT NAME
-name: "cyberchef"
+name: cyberchef
+# https://gchq.github.io/CyberChef/
+# https://github.com/gchq/CyberChef
 
-#-[ SERVICES
 services:
+  # CyberChef - Cyber Swiss Army Knife
   cyberchef:
-    image: "ghcr.io/gchq/cyberchef:latest"
-    container_name: "cyberchef"
+    image: ghcr.io/gchq/cyberchef:${CYBERCHEF_IMAGE_TAG:-latest}
+    container_name: cyberchef
     networks:
-      - "cloudflare"
-    restart: "unless-stopped"
+      # Default Port: 8080
+      - cloudflare-ingress
+    restart: unless-stopped
 
-#-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
+  cloudflare-ingress:
     external: true

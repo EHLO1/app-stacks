@@ -1,8 +1,9 @@
 #-[ PROJECT NAME
 name: coturn
+# https://github.com/coturn/coturn
 
 services:
-  # coturn - TURN Server
+  # Coturn - TURN Server
   coturn:
     image: coturn/coturn:${COTURN_IMAGE_TAG}
     container_name: coturn
@@ -17,14 +18,14 @@ services:
       - --fingerprint
       - --lt-cred-mech
       - --external-ip=${EXTERNAL_IP}
-      - --realm=turn.jjcasa.net
+      - --realm=${BASE_URL}
       - --listening-ip=0.0.0.0
-      - --listening-port=3478
+      - --listening-port=3578
       - --tls-listening-port=443
-      - --min-port=50000
+      - --min-port=51000
       - --max-port=60000
-      - --cert=/certs/turn.jjcasa.net.crt
-      - --pkey=/certs/turn.jjcasa.net.key
+      - --cert=/certs/${BASE_URL}.crt
+      - --pkey=/certs/${BASE_URL}.key
       - --user=${TURN_USER}:${TURN_PASSWORD}
       - --no-cli
       - --no-multicast-peers

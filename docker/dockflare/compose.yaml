@@ -1,33 +1,44 @@
 #-[ PROJECT NAME
-name: "dockflare"
+name: dockflare
+# https://dockflare.app/
+# https://github.com/ChrispyBacon-dev/DockFlare
 
-#-[ SERVICES
 services:
   # Docker Socket Proxy - Always use protection
-  socket-proxy:
-    image: "tecnativa/docker-socket-proxy:${SOCKET_PROXY_IMAGE_TAG}"
-    container_name: "socket-proxy"
-    env_file: "./.env"    
+  dockflare-socket-proxy:
+    image: tecnativa/docker-socket-proxy:${SOCKET_PROXY_IMAGE_TAG}
+    container_name: dockflare-socket-proxy
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - CONTAINERS=1
+      - EVENTS=1
+      - NETWORKS=1
+      - IMAGES=1
+      - POST=1
+      - PING=1
+      - INFO=1
+      - EXEC=1
     networks:
-      - "private"
-    restart: "unless-stopped"
+      - dockflare-backend
+    restart: unless-stopped
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - /var/run/docker.sock:/var/run/docker.sock
 
   # Init Only - Set Volume permissions
   dockflare-init:
-    image: "alpine:${ALPINE_IMAGE_TAG}"
-    command: ["sh", "-c", "chown -R 65532:65532 /app/data"]
+    image: alpine:${ALPINE_IMAGE_TAG}
+    command: ["sh", "-c", "chown -R ${DOCKFLARE_UID:-65532}:${DOCKFLARE_GID:-65532} /app/data"]
+    container_name: dockflare-init
     networks:
-      - "private"
-    restart: "no"
+      - dockflare-backend
+    restart: no
     volumes:
-      - "dockflare.data:/app/data"
+      - dockflare.data:/app/data
 
   # Dockflare - Cloudflare Tunnel, Access, and DNS Automation Using Docker Labels
   dockflare:
-    image: "alplat/dockflare:${DOCKFLARE_IMAGE_TAG}"
-    container_name: "dockflare"
+    image: alplat/dockflare:${DOCKFLARE_IMAGE_TAG}
+    container_name: dockflare
     depends_on:
       socket-proxy:
         condition: "service_started"
@@ -37,6 +48,7 @@ services:
         condition: "service_started"
     env_file: "./.env"
     networks:
+      # Default Port: 5000
       - "cloudflare"
       - "private"
     restart: "unless-stopped"

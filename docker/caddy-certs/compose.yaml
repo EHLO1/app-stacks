@@ -1,5 +1,7 @@
 #-[ PROJECT NAME
 name: caddy-certs
+# https://caddyserver.com/
+# https://github.com/caddyserver/caddy
 
 services:
   # Caddy - Abused for Certificates

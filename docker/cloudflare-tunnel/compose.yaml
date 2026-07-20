@@ -1,5 +1,7 @@
 #-[ PROJECT NAME
 name: cloudflare-tunnel
+# https://developers.cloudflare.com/tunnel/
+# https://github.com/cloudflare/cloudflared
 
 services:
   # Cloudflare Tunnel
