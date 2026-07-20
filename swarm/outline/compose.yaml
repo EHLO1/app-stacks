@@ -62,8 +62,6 @@ services:
       restart_policy:
         condition: on-failure
     env_file: ./.env
-    environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@outline-postgres:5432/${POSTGRES_DB}
     networks:
       - outline-backend
       - cloudflare-ingress
