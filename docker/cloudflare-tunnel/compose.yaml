@@ -16,17 +16,16 @@ services:
       retries: 3
       start_period: 10s
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
-        max-size: "100m"
-        max-file: "10"
+        max-size: 100m
+        max-file: 10
     networks:
-      - "cloudflare"
-    restart: "unless-stopped"
+      - cloudflare
+    restart: unless-stopped
 
-#-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
   cloudflare:
-    name: "cloudflare"
-    driver: "bridge"
+    driver: bridge
+    name: cloudflare

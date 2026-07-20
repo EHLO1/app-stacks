@@ -1,0 +1,18 @@
+{
+    http_port 8080
+    https_port 8443
+
+    events {
+        on cert_obtained exec /usr/local/bin/deploy-certs.sh {event.data.certificate_path} {event.data.private_key_path}
+    }
+}
+
+{$BASE_URL} {
+    tls {
+        issuer acme {
+            email {$SSL_EMAIL}
+            dns cloudflare {$CLOUDFLARE_API_TOKEN}
+        }
+    }
+    respond "Certificate Manager"
+}
