@@ -10,11 +10,9 @@ services:
     image: cloudflare/cloudflared:latest
     command: tunnel run
     environment:
-      TUNNEL_TOKEN_FILE: /run/secrets/cf_tunnel_token
-    secrets:
-      - cf_tunnel_token
+      - TUNNEL_TOKEN=${KC1_CLOUDFLARE_TUNNEL_TOKEN}
     networks:
-      - cloudflare
+      - cloudflare-ingress
     deploy:
       mode: global
       placement: 
@@ -29,11 +27,7 @@ services:
         delay: 10s
 
 networks:
-  cloudflare:
+  cloudflare-ingress:
     driver: overlay
-    name: cloudflare
+    name: cloudflare-ingress
     attachable: true
-
-secrets:
-  cf_tunnel_token:
-    external: true
