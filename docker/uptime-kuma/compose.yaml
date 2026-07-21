@@ -1,24 +1,25 @@
 #-[ PROJECT NAME
-name: "uptime-kuma"
+name: uptime-kuma
+# https://uptime.kuma.pet/
+# https://github.com/louislam/uptime-kuma
 
-#-[ SERVICES
 services:
   # Uptime Kuma - Statuses, Notifications, Mayhem Regulator
   uptime-kuma:
-    image: "louislam/uptime-kuma:beta"
-    container_name: "uptime-kuma"
+    image: louislam/uptime-kuma:${UPTIME_KUMA_IMAGE_TAG:-beta}
+    container_name: uptime-kuma
     networks:
-      - "cloudflare"
-    restart: "unless-stopped"
+      # Default Port: 3001
+      - cloudflare-ingress
+    restart: unless-stopped
     volumes:
-      - "uptime-kuma.data:/app/data"
+      - uptime-kuma.data:/app/data
 
-#-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
+  cloudflare-ingress:
     external: true
 
-#-[ VOLUMES
 volumes:
   uptime-kuma.data:
+    name: uptime-kuma.data

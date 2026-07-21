@@ -1,33 +1,35 @@
 #-[ PROJECT NAME
-name: "zerobyte"
+name: zerobyte
+# https://zerobyte.app/
+# https://github.com/nicotsx/zerobyte
 
-#-[ SERVICES
 services:
+  # Zerobyte - Backups
   zerobyte:
-    image: "ghcr.io/nicotsx/zerobyte:latest"
-    container_name: "zerobyte"
+    image: ghcr.io/nicotsx/zerobyte:${ZEROBYTE_IMAGE_TAG:-latest}
+    container_name: zerobyte
     environment:
-      - "TZ=America/Chicago"
+      - TZ=America/Chicago
     networks:
-      - "cloudflare"
-    restart: "unless-stopped"
+      # Default Port: 4096
+      - cloudflare-ingress
+    restart: unless-stopped
     volumes:
-      - "/etc/localtime:/etc/localtime:ro"
-      - "zerobyte.data:/var/lib/zerobyte"
-      - "~/.config/rclone:/root/.config/rclone"
-      - type: "bind"
-        source: "/mnt/backups"
-        target: "/remote"
+      - /etc/localtime:/etc/localtime:ro
+      - zerobyte.data:/var/lib/zerobyte
+      - ~/.config/rclone:/root/.config/rclone
+      - type: bind
+        source: /mnt/backups
+        target: /remote
         read_only: true
         bind:
-          propagation: "shared"
+          propagation: shared
 
-#-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
+  cloudflare-ingress:
     external: true
 
-#-[ VOLUMES
 volumes:
   zerobyte.data:
+    name: zerobyte.data

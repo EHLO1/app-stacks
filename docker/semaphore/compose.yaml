@@ -1,74 +1,99 @@
 #-[ PROJECT NAME
-name: "semaphore"
+name: semaphore
+# https://semaphoreui.com/
+# https://github.com/semaphoreui/semaphore
 
-#-[ SERVICES
 services:
   # Postgres - SQL Database
-  postgres:
-    image: "postgres:${POSTGRES_IMAGE_TAG}"
-    container_name: "semaphore-postgres"
+  semaphore-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: semaphore-postgres
     environment:
+      - "POSTGRES_DB=${POSTGRES_DB}"
       - "POSTGRES_USER=${POSTGRES_USER}"
       - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
-      - "POSTGRES_DB=${POSTGRES_DB}"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready", "-h", "localhost", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
-      interval: "5s"
-      timeout: "5s"
-      retries: "10"
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
-      - "private"
-    restart: "unless-stopped"
+      - semaphore-backend
+    restart: unless-stopped
     volumes:
-      - "postgres.data:/var/lib/postgresql/data"
+      - semaphore-postgres.data:/var/lib/postgresql/data
 
   # Semaphore UI - Ansible, Terraform Automation UI
   semaphore:
-    image: "semaphoreui/semaphore:${SEMAPHORE_IMAGE_TAG}"   # v2.16.51
-    container_name: "semaphore"
+    image: semaphoreui/semaphore:${SEMAPHORE_IMAGE_TAG}
+    container_name: semaphore
     depends_on:
-      - "postgres"
-    env_file: "./.env"
+      - semaphore-postgres
     environment:
-      SEMAPHORE_OIDC_PROVIDERS: |
-        {
-          "pocketid": {
-            "display_name": "JJCasa ID",
-            "color": "red",
-            "icon": "login-variant",
-            "provider_url": "${SEMAPHORE_OIDC_ISSUER}",
-            "client_id": "${SEMAPHORE_OIDC_CLIENT_ID}",
-            "client_secret": "${SEMAPHORE_OIDC_CLIENT_SECRET}",
-            "redirect_url": "${SEMAPHORE_WEB_ROOT}/api/auth/oidc/pocketid/redirect/",
-            "scopes": [
-              "openid",
-              "profile",
-              "email"
-            ],
-            "username_claim": "email",
-            "name_claim": "given_name"
+      - SEMAPHORE_DB_DIALECT=${SEMAPHORE_DB_DIALECT}
+      - SEMAPHORE_DB_HOST=${SEMAPHORE_DB_HOST}
+      - SEMAPHORE_DB_NAME=${SEMAPHORE_DB_NAME}
+      - SEMAPHORE_DB_USER=${SEMAPHORE_DB_USER}
+      - SEMAPHORE_DB_PASS=${SEMAPHORE_DB_PASS}
+      - SEMAPHORE_WEB_ROOT=${SEMAPHORE_WEB_ROOT}
+      - SEMAPHORE_PORT=${SEMAPHORE_PORT}
+      - SEMAPHORE_SCHEDULE_TIMEZONE=${SEMAPHORE_SCHEDULE_TIMEZONE}
+      - SEMAPHORE_ADMIN=${SEMAPHORE_ADMIN}
+      - SEMAPHORE_ADMIN_PASSWORD=${SEMAPHORE_ADMIN_PASSWORD}
+      - SEMAPHORE_ADMIN_NAME=${SEMAPHORE_ADMIN_NAME}
+      - SEMAPHORE_ADMIN_EMAIL=${SEMAPHORE_ADMIN_EMAIL}
+      - SEMAPHORE_EMAIL_SENDER=${SEMAPHORE_EMAIL_SENDER}
+      - SEMAPHORE_EMAIL_HOST=${SEMAPHORE_EMAIL_HOST}
+      - SEMAPHORE_EMAIL_PORT=${SEMAPHORE_EMAIL_PORT}
+      - SEMAPHORE_EMAIL_USERNAME=${SEMAPHORE_EMAIL_USERNAME}
+      - SEMAPHORE_EMAIL_PASSWORD=${SEMAPHORE_EMAIL_PASSWORD}
+      - SEMAPHORE_EMAIL_SECURE=${SEMAPHORE_EMAIL_SECURE}
+      - SEMAPHORE_EMAIL_TLS=${SEMAPHORE_EMAIL_TLS}
+      - >-
+        SEMAPHORE_OIDC_PROVIDERS=
+          {
+            "pocketid": {
+              "display_name": "JJCasa ID",
+              "color": "red",
+              "icon": "login-variant",
+              "provider_url": "${SEMAPHORE_OIDC_ISSUER}",
+              "client_id": "${SEMAPHORE_OIDC_CLIENT_ID}",
+              "client_secret": "${SEMAPHORE_OIDC_CLIENT_SECRET}",
+              "redirect_url": "${SEMAPHORE_WEB_ROOT}/api/auth/oidc/pocketid/redirect/",
+              "scopes": [
+                "openid",
+                "profile",
+                "email"
+              ],
+              "username_claim": "email",
+              "name_claim": "given_name"
+            }
           }
-        }
     networks:
-      - "cloudflare"
-      - "private"
+      # Default Port: 3000
+      - cloudflare-ingress
+      - semaphore-backend
     volumes:
-      - "semaphore.data:/var/lib/semaphore"
-      - "semaphore.config:/etc/semaphore"
-      - "semaphore.tmp:/tmp/semaphore"
+      - semaphore.data:/var/lib/semaphore
+      - semaphore.config:/etc/semaphore
+      - semaphore.tmp:/tmp/semaphore
 
-#-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
+  cloudflare-ingress:
     external: true
   # Storage / Backend Network (Not Accessible Externally)
-  private:
-    driver: "bridge"
+  semaphore-backend:
+    driver: bridge
+    name: semaphore-backend
 
 #-[ VOLUMES
 volumes:
+  semaphore-postgres.data:  
+    name: semaphore-postgres.data
   semaphore.data:
+    name: semaphore.data
   semaphore.config:
+    name: semaphore.config
   semaphore.tmp:
-  postgres.data:
+    name: semaphore.tmp

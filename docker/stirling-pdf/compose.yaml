@@ -1,27 +1,28 @@
 #-[ PROJECT NAME
-name: "stirling-pdf"
+name: stirling-pdf
+# https://stirling.com/
+# https://github.com/Stirling-Tools/stirling-pdf
 
-#-[ SERVICES
 services:
   # Like Adobe Acrobat, but I don't have to sell my organs to use it
   stirling-pdf:
-    image: "stirlingtools/stirling-pdf:${STIRLING_PDF_IMAGE_TAG}"
-    container_name: "stirling-pdf"
-    env_file: "./.env"
+    image: stirlingtools/stirling-pdf:${STIRLING_PDF_IMAGE_TAG}
+    container_name: stirling-pdf
+    environment:
     networks:
-      - "cloudflare"
-    restart: "unless-stopped"
+      - cloudflare-ingress
+    restart: unless-stopped
     volumes:
-      - "stirling-pdf.data:/configs"             # Settings & database
-      - "stirling-pdf.pipeline:/pipeline"         # Automation configs
+      - stirling-pdf.data:/configs              # Settings & database
+      - stirling-pdf.pipeline:/pipeline         # Automation configs
 
-#-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
+  cloudflare-ingress:
     external: true
 
-#-[ VOLUMES
 volumes:
   stirling-pdf.data:
+    name: stirling-pdf.data
   stirling-pdf.pipeline:
+    name: stirling-pdf.pipeline

@@ -1,16 +1,20 @@
 #-[ PROJECT NAME
-name: "samba"
+name: samba
+# https://github.com/dockur/samba
 
-#-[ SERVICES
 services:
+  # Samba - SMB / CIFS - Great for backups across OS's
   samba:
-    image: "dockurr/samba:${SAMBA_IMAGE_TAG}"
-    container_name: "samba"
-    env_file: "./.env"
+    image: dockurr/samba:${SAMBA_IMAGE_TAG}
+    container_name: samba
+    environment:
+      - NAME=${NAME}
+      - USER=${USER}
+      - PASS=${PASS}
     ports:
-      - "445:445"
-    restart: "unless-stopped"
+      - 445:445
+    restart: unless-stopped
     volumes:
-      - "/var/lib/docker/volumes:/storage/backups/docker-volumes:ro"
-      - "/srv/docker/backups/postgres:/storage/backups/postgres:ro"
-      - "./smb.conf:/etc/samba/smb.conf:ro"
+      - /var/lib/docker/volumes:/storage/backups/docker-volumes:ro
+      - /srv/docker/backups/postgres:/storage/backups/postgres:ro
+      - ./smb.conf:/etc/samba/smb.conf:ro

@@ -20,7 +20,6 @@ services:
     volumes:
       - termix.data:/app/data
 
-
   # Guacamole - Open Source RDP
   termix-guacd:
     image: guacamole/guacd:${GUACD_IMAGE_TAG:-1.6.0}     # 1.6.0
