@@ -1,0 +1,105 @@
+#-[ PROJECT NAME
+name: outline
+# https://www.getoutline.com/
+# https://github.com/outline
+
+services:
+  # Postgres - SQL Database
+  outline-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: outline-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - outline-backend
+    restart: unless-stopped
+    volumes:
+      - outline-postgres.data:/var/lib/postgresql/data
+
+  # Valkey - Key/Value Store
+  outline-valkey:
+    image: valkey/valkey:${VALKEY_IMAGE_TAG}
+    container_name: outline-valkey
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+    networks:
+      - outline-backend
+    restart: unless-stopped
+    volumes:
+      - outline-valkey.data:/data
+
+  # Outline - Team Knowledge Base & Documentation Platform
+  outline:
+    image: docker.getoutline.com/outlinewiki/outline:${OUTLINE_IMAGE_TAG}
+    container_name: outline
+    depends_on:
+      outline-postgres:
+        condition: service_healthy
+      outline-valkey:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_MAX_MEMORY=${REDIS_MAX_MEMORY}
+      - URL=${URL}
+      - PORT=${PORT}
+      - FORCE_HTTPS=${FORCE_HTTPS}
+      - WEB_CONCURRENCY=${WEB_CONCURRENCY}
+      - RATE_LIMITER_ENABLED=${RATE_LIMITER_ENABLED}
+      - RATE_LIMITER_REQUESTS=${RATE_LIMITER_REQUESTS}
+      - RATE_LIMITE_DURATION=${RATE_LIMITE_DURATION}
+      - SECRET_KEY=${SECRET_KEY}
+      - UTILS_SECRET=${UTILS_SECRET}
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_CONNECTION_POOL_MIN=${DATABASE_CONNECTION_POOL_MIN}
+      - DATABASE_CONNECTION_POOL_MAX=${DATABASE_CONNECTION_POOL_MAX}
+      - PGSSLMODE=${PGSSLMODE}
+      - FILE_STORAGE=${FILE_STORAGE}
+      - FILE_STORAGE_LOCAL_ROOT_DIR=${FILE_STORAGE_LOCAL_ROOT_DIR}
+      - FILE_STORAGE_UPLOAD_MAX_SIZE=${FILE_STORAGE_UPLOAD_MAX_SIZE}
+      - OIDC_ISSUER_URL=${OIDC_ISSUER_URL}
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET}
+      - OIDC_USERNAME_CLAIM=${OIDC_USERNAME_CLAIM}
+      - OIDC_DISPLAY_NAME=${OIDC_DISPLAY_NAME}
+      - OIDC_SCOPES=${OIDC_SCOPES}
+      - NODE_ENV=${NODE_ENV}
+      - DEFAULT_LANGUAGE=${DEFAULT_LANGUAGE}
+      - ENABLE_UPDATES=${ENABLE_UPDATES}
+      - LOG_LEVEL=${LOG_LEVEL}
+    networks:
+      - cloudflare-ingress
+      - outline-backend
+    restart: unless-stopped
+    volumes:
+    - outline.data:/var/lib/outline/data
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  outline-backend:
+    driver: bridge
+    name: outline-backend
+
+volumes:
+  outline-postgres.data:
+    name: outline-postgres.data
+  outline-valkey.data:
+    name: outline-valkey.data
+  outline.data:
+    name: outline.data
