@@ -1,16 +1,19 @@
 #-[ PROJECT NAME
-name: "omni-tools"
+name: omni-tools
+# https://omnitools.app/
+# https://github.com/iib0011/omni-tools
 
-#-[ SERVICES
 services:
+  # OmniTools - Toolkit for editing images, text, lists, data
   omni-tools:
-    image: "iib0011/omni-tools:${OMNI_TOOLS_IMAGE_TAG}"
-    container_name: "omni-tools"
+    image: iib0011/omni-tools:${OMNI_TOOLS_IMAGE_TAG:-latest}
+    container_name: omni-tools
     networks:
-      - "cloudflare"
+      # Default Port: 80
+      - cloudflare-ingress
     restart: unless-stopped
 
-#-[ NETWORKS
 networks:
-  cloudflare:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
     external: true

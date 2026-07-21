@@ -31,7 +31,7 @@ services:
       - MEMOS_INSTANCE_URL=${MEMOS_INSTANCE_URL}
       - MEMOS_ADDR=${MEMOS_ADDR}
       - MEMOS_PORT=${MEMOS_PORT}
-      - MEMOS_DRIVER=${MEMOS_DRIVER}d
+      - MEMOS_DRIVER=${MEMOS_DRIVER}
       - MEMOS_DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@memos-postgres:5432/${POSTGRES_DB}?sslmode=disable
       - MEMOS_MODE=${MEMOS_MODE}
       - MEMOS_DATA=${MEMOS_DATA}

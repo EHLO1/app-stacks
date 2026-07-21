@@ -1,0 +1,51 @@
+#-[ PROJECT NAME
+name: papra
+# https://papra.app/en/
+# https://github.com/papra-hq/papra
+
+services:
+  # Papra - Document Management System
+  papra:
+    image: ghcr.io/papra-hq/papra:${PAPRA_IMAGE_TAG}
+    container_name: papra
+    environment:
+      - APP_BASE_URL=${APP_BASE_URL}
+      - DOCUMENT_STORAGE_DRIVER=${DOCUMENT_STORAGE_DRIVER}
+      - AI_IS_ENABLED=${AI_IS_ENABLED}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - AI_DEFAULT_MODEL=${AI_DEFAULT_MODEL}
+      - AUTO_TAGGING_ENABLED=${AUTO_TAGGING_ENABLED}
+      - AUTO_TAGGING_MODEL=${AUTO_TAGGING_MODEL}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_IS_REGISTRATION_ENABLED=${AUTH_IS_REGISTRATION_ENABLED}
+      - AUTH_PROVIDERS_EMAIL_IS_ENABLED=${AUTH_PROVIDERS_EMAIL_IS_ENABLED}
+      - >-
+        AUTH_PROVIDERS_CUSTOMS=[
+          {
+            "providerId": "pocket-id",
+            "providerName": "JJCasa ID",
+            "providerIconUrl": "https://raw.githubusercontent.com/pocket-id/pocket-id/main/frontend/public/favicon.ico",
+            "clientId": "${PAPRA_OIDC_CLIENT_ID}",
+            "clientSecret": "${PAPRA_OIDC_CLIENT_SECRET}",
+            "pkce": true,
+            "type": "oidc",
+            "discoveryUrl": "${PAPRA_OIDC_ISSUER}/.well-known/openid-configuration",
+            "scopes": ["openid", "profile", "email", "groups"]
+          }
+        ]
+    networks:
+      # Default Port: 1221
+      - cloudflare-ingress
+    restart: unless-stopped
+    user: 1000:1000
+    volumes:
+      - papra.data:/app/app-data
+    
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+
+volumes:
+  papra.data:
+    name: papra.data

@@ -10,3 +10,6 @@ There are many ways to deploy n8n, but this is a basic, secure, and stable metho
 - n8n task runner for execution of Javascript and Python code in the Code node
 - Postgres 17
 - Valkey 9
+
+## Miscellaneous
+Avoid giving n8n the subdomain "n8n". Apparently Google treats this as a malicious extension of n8n's own cloud. It's been an issue for a long time and it doesn't look like it'll get fixed any time soon.

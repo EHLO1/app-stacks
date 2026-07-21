@@ -1,16 +1,25 @@
 #-[ PROJECT NAME
-name: "openssh-server"
+name: openssh-server
+# https://docs.linuxserver.io/images/docker-openssh-server/
+# https://github.com/linuxserver/docker-openssh-server
 
-#-[ SERVICES
 services:
   # OpenSSH Server - Useful for controlled directory mount
   openssh-server:
-    image: "lscr.io/linuxserver/openssh-server:${OPENSSH_SERVER_IMAGE_TAG}"
-    container_name: "openssh-server"
-    env_file: "./.env"
+    image: lscr.io/linuxserver/openssh-server:${OPENSSH_SERVER_IMAGE_TAG}
+    container_name: openssh-server
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - SUDO_ACCESS=${SUDO_ACCESS}
+      - PASSWORD_ACCESS=${PASSWORD_ACCESS}
+      - PUBLIC_KEY=${PUBLIC_KEY}
+      - USER_PASSWORD=${USER_PASSWORD}
+      - USER_NAME=${USER_NAME}
     ports:
-      - "2222:2222"
-    restart: "unless-stopped"
+      - 2222:2222
+    restart: unless-stopped
     volumes:
-      - "/var/lib/docker/volumes:/backups/docker-volumes:ro"
-      - "/srv/docker/backups/postgres:/backups/postgres:ro"
+      - /host/dir1:/container/dir1:ro
+      - /host/dir2:/container/dir2:ro

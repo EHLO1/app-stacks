@@ -1,85 +1,127 @@
 #-[ PROJECT NAME
-name: "netbox"
+name: netbox
+# https://netboxlabs.com/
+# https://github.com/netbox-community/netbox
+# https://github.com/netbox-community/netbox-docker
 
-#-[ SERVICES
 services:
   # Postgres - SQL Database
-  postgres:
-    image: "postgres:${POSTGRES_IMAGE_TAG}"
-    container_name: "netbox-postgres"
+  netbox-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: netbox-postgres
     environment:
-      - "POSTGRES_USER=${POSTGRES_USER}"
-      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
-      - "POSTGRES_DB=${POSTGRES_DB}"
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready", "-h", "localhost", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
-      interval: "5s"
-      timeout: "5s"
-      retries: "10"
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
-      - "private"
-    restart: "unless-stopped"
+      - netbox-backend
+    restart: unless-stopped
     volumes:
-      - "postgres.data:/var/lib/postgresql/data"
+      - netbox-postgres.data:/var/lib/postgresql/data
   
-  # Redis - Jk it's valkey
-  redis:
-    image: "valkey/valkey:${VALKEY_IMAGE_TAG}"
-    container_name: "netbox-redis"
+  # Valkey - Key/Value Store
+  netbox-valkey:
+    image: valkey/valkey:${VALKEY_IMAGE_TAG}
+    container_name: netbox-valkey
     command: ["valkey-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     networks:
-      - "private"
+      - netbox-backend
     volumes:
-      - "redis.data:/data"
-  redis-cache:
+      - netbox-valkey.data:/data
+  netbox-valkey-cache:
     image: "valkey/valkey:${VALKEY_IMAGE_TAG}"
-    container_name: "netbox-redis-cache"
+    container_name: netbox-valkey-cache
     command: ["valkey-server", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
-      - "redis-cache.data:/data"
+      - netbox-valkey-cache.data:/data
 
   # NetBox - An Overwhelming, Unnecessary CMDB for a Home Lab Environment
   netbox: &netbox
-    image: "docker.io/netboxcommunity/netbox:${NETBOX_IMAGE_TAG}"
-    container_name: "netbox"
+    image: docker.io/netboxcommunity/netbox:${NETBOX_IMAGE_TAG}
+    container_name: netbox
     depends_on:
-      - "postgres"
-      - "redis"
-      - "redis-cache"
-    env_file: "./.env"
+      - netbox-postgres
+      - netbox-valkey
+      - netbox-valkey-cache
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - WEBHOOKS_ENABLED=${WEBHOOKS_ENABLED}
+      - SKIP_SUPERUSER=${SKIP_SUPERUSER}
+      - SUPERUSER_NAME=${SUPERUSER_NAME}
+      - SUPERUSER_PASSWORD=${SUPERUSER_PASSWORD}
+      - SUPERUSER_EMAIL=${SUPERUSER_EMAIL}
+      - SUPERUSER_API_TOKEN=${SUPERUSER_API_TOKEN}
+      - SECRET_KEY=${SECRET_KEY}
+      - API_TOKEN_PEPPER_1=${API_TOKEN_PEPPER_1}
+      - REDIS_CACHE_DATABASE=${REDIS_CACHE_DATABASE}
+      - REDIS_CACHE_HOST=${REDIS_CACHE_HOST}
+      - REDIS_CACHE_INSECURE_SKIP_TLS_VERIFY=${REDIS_CACHE_INSECURE_SKIP_TLS_VERIFY}
+      - REDIS_CACHE_PASSWORD=${REDIS_CACHE_PASSWORD}
+      - REDIS_CACHE_SSL=${REDIS_CACHE_SSL}
+      - REDIS_DATABASE=${REDIS_DATABASE}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_INSECURE_SKIP_TLS_VERIFY=${REDIS_INSECURE_SKIP_TLS_VERIFY}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_SSL=${REDIS_SSL}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_TLS=${EMAIL_TLS}
+      - EMAIL_TIMEOUT=${EMAIL_TIMEOUT}
+      - GRAPHQL_ENABLED=${GRAPHQL_ENABLED}
+      - METRICS_ENABLED=${METRICS_ENABLED}
+      - RELEASE_CHECK_URL=${RELEASE_CHECK_URL}
+      - MEDIA_ROOT=${MEDIA_ROOT}
+      - CORS_ORIGIN_ALLOW_ALL=${CORS_ORIGIN_ALLOW_ALL}
     networks:
-      - "cloudflare"
-      - "private"
-    user: "unit:root"
+      - cloudflare-ingress
+      - netbox-backend
+    user: unit:root
     volumes:
-      - "netbox.config:/etc/netbox/config:rw"
-      - "netbox.media:/opt/netbox/netbox/media:rw"
-      - "netbox.reports:/opt/netbox/netbox/reports:rw"
-      - "netbox.scripts:/opt/netbox/netbox/scripts:rw"
+      - netbox.config:/etc/netbox/config:rw
+      - netbox.media:/opt/netbox/netbox/media:rw
+      - netbox.reports:/opt/netbox/netbox/reports:rw
+      - netbox.scripts:/opt/netbox/netbox/scripts:rw
 
   netbox-worker-1:
     <<: *netbox
-    image: "docker.io/netboxcommunity/netbox:${NETBOX_IMAGE_TAG}"
-    container_name: "netbox-worker-1"
-    depends_on:
-      - "netbox"
+    image: docker.io/netboxcommunity/netbox:${NETBOX_IMAGE_TAG}
+    container_name: netbox-worker-1
     command: ["/opt/netbox/venv/bin/python", "/opt/netbox/netbox/manage.py", "rqworker"]
+    depends_on:
+      - netbox
 
-#-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
+  cloudflare-ingress:
     external: true
   # Storage / Backend Network (Not Accessible Externally)
-  private:
-    driver: "bridge"
+  netbox-backend:
+    driver: bridge
+    name: netbox-backend
 
-#-[ VOLUMES
 volumes:
-  postgres.data:
-  redis.data:
-  redis-cache.data:
+  netbox-postgres.data:
+    name: netbox-postgres.data
+  netbox-valkey.data:
+    name: netbox-valkey.data
+  netbox-valkey-cache.data:
+    name: netbox-valkey-cache.data
   netbox.config:
+    name: netbox.config
   netbox.media:
+    name: netbox.media
   netbox.reports:
+    name: netbox.reports
   netbox.scripts:
+    name: netbox.scripts
