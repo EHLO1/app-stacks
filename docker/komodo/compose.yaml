@@ -1,7 +1,8 @@
 #-[ PROJECT NAME
-name: "komodo"
+name: komodo
+# https://komo.do/
+# https://github.com/moghtech/komodo
 
-#-[ SERVICES
 services:
    # Postgres - SQL Database
   komodo-postgres:
@@ -42,31 +43,81 @@ services:
     init: true
     depends_on:
       - komodo-ferretdb
-    env_file: ./.env
+    environment:
+      - TZ=${TZ}
+      - KOMODO_DATABASE_ADDRESS=${KOMODO_DATABASE_ADDRESS}
+      - KOMODO_DATABASE_USERNAME=${KOMODO_DATABASE_USERNAME}
+      - KOMODO_DATABASE_PASSWORD=${KOMODO_DATABASE_PASSWORD}
+      - KOMODO_HOST=${KOMODO_HOST}
+      - KOMODO_TITLE=${KOMODO_TITLE}
+      - KOMODO_DISABLE_CONFIRM_DIALOG=${KOMODO_DISABLE_CONFIRM_DIALOG}
+      - KOMODO_PERIPHERY_PUBLIC_KEY=${KOMODO_PERIPHERY_PUBLIC_KEY}
+      - KOMODO_MONITORING_INTERVAL=${KOMODO_MONITORING_INTERVAL}
+      - KOMODO_RESOURCE_POLL_INTERVAL=${KOMODO_RESOURCE_POLL_INTERVAL}
+      - KOMODO_WEBHOOK_SECRET=${KOMODO_WEBHOOK_SECRET}
+      - KOMODO_JWT_SECRET=${KOMODO_JWT_SECRET}
+      - KOMODO_LOCAL_AUTH=${KOMODO_LOCAL_AUTH}
+      - KOMODO_DISABLE_USER_REGISTRATION=${KOMODO_DISABLE_USER_REGISTRATION}
+      - KOMODO_ENABLE_NEW_USERS=${KOMODO_ENABLE_NEW_USERS}
+      - KOMODO_DISABLE_NON_ADMIN_CREATE=${KOMODO_DISABLE_NON_ADMIN_CREATE}
+      - KOMODO_TRANSPARENT_MODE=${KOMODO_TRANSPARENT_MODE}
+      - KOMODO_OIDC_ENABLED=${KOMODO_OIDC_ENABLED}
+      - KOMODO_OIDC_PROVIDER=${KOMODO_OIDC_PROVIDER}
+      - KOMODO_OIDC_CLIENT_ID=${KOMODO_OIDC_CLIENT_ID}
+      - KOMODO_OIDC_CLIENT_SECRET=${KOMODO_OIDC_CLIENT_SECRET}
+      - KOMODO_OIDC_USE_FULL_EMAIL=${KOMODO_OIDC_USE_FULL_EMAIL}
     labels:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     networks:
-      - mbox-cloudflare
+      # Default Port: 9120
+      - komodo-cloudflare
       - komodo-backend
     ports:
+      # Exposed port allows outbound Periphery connection to Komodo Core/Manager
       - 9120:9120
     restart: unless-stopped
     volumes:
       - komodo.backups:/backups
       - komodo.keys:/config/keys
 
-#-[ NETWORKS
+  # Cloudflare Tunnel
+  komodo-cloudflare:
+    image: cloudflare/cloudflared:${CLOUDFLARE_IMAGE_TAG}
+    container_name: komodo-cloudflare
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    healthcheck:
+      test: ["CMD", "cloudflared", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+        max-file: 10
+    networks:
+      - komodo-cloudflare
+    restart: unless-stopped
+
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  mbox-cloudflare:
-    external: true
+  komodo-cloudflare:
+    driver: bridge
+    name: komodo-cloudflare
   # Storage / Backend Network (Not Accessible Externally)
   komodo-backend:
-    driver: "bridge"
+    driver: bridge
+    name: komodo-backend
 
-#-[ VOLUMES
 volumes:
   komodo-postgres.data:
+    name: komodo-postgres.data
   komodo-ferretdb.state:
+    name: komodo-ferretdb.state
   komodo.backups:
+    name: komodo.backups
   komodo.keys:
+    name: komodo.keys

@@ -1,24 +1,60 @@
 #-[ PROJECT NAME
-name: "memos"
+name: memos
+# https://usememos.com/
+# https://github.com/usememos/memos
 
-#-[ SERVICES
 services:
-  memos:
-    image: "neosmemo/memos:stable"
-    container_name: "memos"
-    env_file: "./.env"
+  # Postgres - SQL Database
+  memos-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: memos-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     networks:
-      - "cloudflare"
-    restart: "unless-stopped"
+      - memos-backend
+    restart: unless-stopped
     volumes:
-      - "memos.data:/var/opt/memos"
+      - memos-postgres.data:/var/lib/postgresql/data
+  
+  # Memos - Timeline / Notes / Daily Logs / Snippets / Links
+  memos:
+    image: neosmemo/memos:${MEMOS_IMAGE_TAG}
+    container_name: memos
+    environment:
+      - MEMOS_INSTANCE_URL=${MEMOS_INSTANCE_URL}
+      - MEMOS_ADDR=${MEMOS_ADDR}
+      - MEMOS_PORT=${MEMOS_PORT}
+      - MEMOS_DRIVER=${MEMOS_DRIVER}d
+      - MEMOS_DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@memos-postgres:5432/${POSTGRES_DB}?sslmode=disable
+      - MEMOS_MODE=${MEMOS_MODE}
+      - MEMOS_DATA=${MEMOS_DATA}
+      - MEMOS_LOG_LEVEL=${MEMOS_LOG_LEVEL}
+    networks:
+      # Default Port: 5230
+      - cloudflare-ingress
+      - memos-backend
+    restart: unless-stopped
+    volumes:
+      - memos.data:/var/opt/memos
 
-#-[ NETWORKS
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
+  cloudflare-ingress:
     external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  memos-backend:
+    driver: bridge
+    name: memos-backend
 
-#-[ VOLUMES
 volumes:
+  memos-postgres.data:
+    name: memos-postgres.data
   memos.data:
+    name: memos.data

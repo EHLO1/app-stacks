@@ -1,5 +1,7 @@
 #-[ PROJECT NAME
-name: "garage"
+name: garage
+# https://garagehq.deuxfleurs.fr/
+# https://git.deuxfleurs.fr/Deuxfleurs/garage
 
 services:
   # Garage - Local S3 Data Storage
@@ -19,7 +21,8 @@ services:
       - GARAGE_ADMIN_TOKEN=${GARAGE_ADMIN_TOKEN}
       - GARAGE_RPC_SECRET=${GARAGE_RPC_SECRET}
     networks:
-      - garage-frontend
+      # Default Port: 3900 (S3 API) / 3903 (Admin API)
+      - garage-backend
     restart: unless-stopped
     volumes:
       - ./config.toml:/etc/garage.toml:ro
@@ -27,9 +30,9 @@ services:
       - garage.data:/var/lib/garage/data
 
 networks:
-  garage-frontend:
+  garage-backend:
     driver: bridge
-    name: garage-frontend
+    name: garage-backend
 
 volumes:
   garage.meta:

@@ -14,7 +14,7 @@ rpc_public_addr = "127.0.0.1:3901"
 #-[ S3 API SETTINGS
 [s3_api]
 api_bind_addr = "0.0.0.0:3900"
-s3_region = "n8n"
+s3_region = "garage"
 root_domain = ".s3.storage" # Required if planning to use virtual-host style bucket addressing
 
 #-[ ADMINISTRATION API
