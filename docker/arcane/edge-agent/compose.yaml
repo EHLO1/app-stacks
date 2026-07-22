@@ -1,0 +1,43 @@
+#-[ PROJECT NAME
+name: arcane-edge-agent
+
+# $HOSTNAME is not exported by default, so run this with:
+# HOSTNAME=$(hostname) doppler run -- docker compose up -d
+# I haven't been able to get this to work without the local docker socket. Will retry another day.
+
+services:
+  arcane-edge-agent-init:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: arcane-edge-agent-init
+    environment:
+      - ARCANE_MANAGER_URL=${ARCANE_MANAGER_API_URL}
+      - AGENT_HOSTNAME=${HOSTNAME}
+      - ARCANE_MANAGER_API_KEY=${ARCANE_MANAGER_API_KEY}
+    restart: no
+    volumes:
+      - arcane-edge-agent.secrets:/secrets
+
+  arcane-edge-agent:
+    image: ghcr.io/getarcaneapp/agent:${ARCANE_IMAGE_TAG:-latest}
+    container_name: arcane-edge-agent
+    depends_on:
+      arcane-edge-agent-init:
+        condition: service_completed_successfully
+    environment:
+      - EDGE_AGENT=true
+      - EDGE_TRANSPORT=auto
+      - AGENT_TOKEN_FILE=/run/secrets/agent_token
+      - MANAGER_API_URL=${ARCANE_MANAGER_API_URL}
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - arcane-edge-agent.data:/app/data
+      - arcane-edge-agent.secrets:/run/secrets:ro
+
+volumes:
+  arcane-edge-agent.data:
+    name: arcane-edge-agent.data
+  arcane-edge-agent.secrets:
+    name: arcane-edge-agent.secrets

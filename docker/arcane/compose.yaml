@@ -1,52 +1,126 @@
 #-[ PROJECT NAME
-name: "arcane"
+name: arcane
+# https://getarcane.app/
+# https://github.com/getarcaneapp/arcane
 
-#-[ SERVICES
 services:
-  # Postgres - SQL Database
-  postgres:
-    image: "postgres:${POSTGRES_IMAGE_TAG}"
-    container_name: "arcane-postgres"
-    environment:
-      - "POSTGRES_USER=${POSTGRES_USER}"
-      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
-      - "POSTGRES_DB=${POSTGRES_DB}"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-h", "localhost", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
-      interval: "5s"
-      timeout: "5s"
-      retries: "10"
-    networks:
-      - "private"
-    restart: "unless-stopped"
-    volumes:
-      - "postgres.data:/var/lib/postgresql/data"
-
-  # Arcane - Docker Management Console https://getarcane.app/
+  # Arcane - Modern Docker Management Platform
   arcane:
-    image: "ghcr.io/getarcaneapp/arcane:${ARCANE_IMAGE_TAG}"
-    container_name: "arcane"
-    env_file: "./.env"
+    image: ghcr.io/getarcaneapp/manager:${ARCANE_IMAGE_TAG}
+    container_name: arcane
+    depends_on:
+      - arcane-caddy
+      - arcane-postgres
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - APP_URL=${APP_URL}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - OIDC_ENABLED=${OIDC_ENABLED}
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET}
+      - OIDC_ISSUER_URL=${OIDC_ISSUER_URL}
+      - OIDC_SCOPES=${OIDC_SCOPES}
+      - OIDC_GROUPS_CLAIM=${OIDC_GROUPS_CLAIM}
+      - OIDC_ROLE_MAPPINGS=${OIDC_ROLE_MAPPINGS}
+      - OIDC_SKIP_TLS_VERIFY=${OIDC_SKIP_TLS_VERIFY}
+      - OIDC_AUTO_REDIRECT_TO_PROVIDER=${OIDC_AUTO_REDIRECT_TO_PROVIDER}
+      - OIDC_MERGE_ACCOUNTS=${OIDC_MERGE_ACCOUNTS}
+      - OIDC_PROVIDER_NAME=${OIDC_PROVIDER_NAME}
+      - OIDC_PROVIDER_LOGO_URL=${OIDC_PROVIDER_LOGO_URL}
+      - DATABASE_URL=${DATABASE_URL}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_JSON=${LOG_JSON}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:3552/api/health >/dev/null || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
     networks:
-      - "cloudflare"
-      - "private"
-    restart: "unless-stopped"
+      - arcane-cloudflare
+      - arcane-cluster
+      - arcane-backend
+    restart: unless-stopped
     volumes:
-      - "arcane.data:/app/data"
-      # Docker Socket is currently REQUIRED!
-      # I am not a fan, but, it's on their near-future roadmap to allow for socket proxies.      
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - /var/run/docker.sock:/var/run/docker.sock
+      - arcane.data:/app/data
 
-#-[ NETWORKS
+  # Postgres - SQL Database
+  arcane-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: arcane-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - arcane-backend
+    restart: unless-stopped
+    volumes:
+      - arcane-postgres.data:/var/lib/postgresql/data
+
+  # Cloudflare Tunnel
+  arcane-cloudflare:
+    image: cloudflare/cloudflared:${CLOUDFLARED_IMAGE_TAG:-latest}
+    container_name: arcane-cloudflare
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    healthcheck:
+      test: ["CMD", "cloudflared", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+        max-file: 10
+    networks:
+      - arcane-cloudflare
+    restart: unless-stopped
+
+  # Caddy - Reverse Proxy for the Arcane Cluster
+  arcane-caddy:
+    build:
+      context: .
+      dockerfile: ./caddy/Dockerfile
+    container_name: arcane-caddy
+    environment:
+      - BASE_URL=${BASE_URL}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - SSL_EMAIL=${SSL_EMAIL}
+    networks:
+      - arcane-cluster
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - arcane-caddy.data:/data
+
 networks:
-  # Public / External Network (Cloudflare Tunnel)
-  cloudflare:
-    external: true
-  # Storage / Backend Network (Not Accessible Externally)
-  private:
-    driver: "bridge"
+  arcane-cloudflare:
+    driver: bridge
+    name: arcane-cloudflare
+  arcane-cluster:
+    driver: bridge
+    name: arcane-cluster
+  arcane-backend:
+    driver: bridge
+    name: arcane-backend
 
-#-[ VOLUMES
 volumes:
-  postgres.data:
   arcane.data:
+    name: arcane.data
+  arcane-postgres.data:
+    name: arcane-postgres.data
+  arcane-caddy.data:
+    name: arcane-caddy.data

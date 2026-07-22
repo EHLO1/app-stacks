@@ -1,0 +1,11 @@
+{$BASE_URL} {
+    tls {
+        issuer acme {
+            email {$SSL_EMAIL}
+            dns cloudflare {$CLOUDFLARE_API_TOKEN}
+        }
+    }
+    # Using h2c:// allows TLS at the front and plain HTTP at the back
+    # AKA this allows gRPC
+    reverse_proxy h2c://arcane:3552
+}

@@ -1,0 +1,26 @@
+#-[ PROJECT NAME
+name: arcane-swarm-agent
+
+# As of July 10th, 2026: Arcane still requires separate agents for Remote Environments and Swarm Nodes.
+# This has to be provisioned manually. After deploying an edge agent + Remote Environment,
+# Join the remote node to a docker swarm cluster. Then, in the Arcane Manager UI, go to Swarm -> Nodes
+# Select the remote node and then "Deploy Agent". Copy the AGENT_TOKEN in the compose snippet.
+# Vault it to Doppler, then rename the variable below and deploy.
+
+services:
+  arcane-swarm-agent:
+    image: ghcr.io/getarcaneapp/agent:latest
+    container_name: arcane-swarm-agent
+    environment:
+      - EDGE_AGENT=true
+      - EDGE_TRANSPORT=poll
+      - AGENT_TOKEN=${ARCANE_SWARM_NODE_NUM_TOKEN}
+      - MANAGER_API_URL=${ARCANE_MANAGER_API_URL}
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - arcane-swarm-agent.data:/app/data
+
+volumes:
+  arcane-swarm-agent.data:
+    name: arcane-swarm-agent.data
