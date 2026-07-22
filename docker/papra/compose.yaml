@@ -40,6 +40,7 @@ services:
     user: 1000:1000
     volumes:
       - papra.data:/app/app-data
+      - papra.db:/app/app-data/db
     
 networks:
   # Public / External Network (Cloudflare Tunnel)
@@ -49,3 +50,5 @@ networks:
 volumes:
   papra.data:
     name: papra.data
+  papra.db:
+    name: papra.db
