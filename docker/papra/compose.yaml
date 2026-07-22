@@ -24,7 +24,7 @@ services:
           {
             "providerId": "pocket-id",
             "providerName": "JJCasa ID",
-            "providerIconUrl": "https://raw.githubusercontent.com/pocket-id/pocket-id/main/frontend/public/favicon.ico",
+            "providerIconUrl": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/pocket-id.svg",
             "clientId": "${PAPRA_OIDC_CLIENT_ID}",
             "clientSecret": "${PAPRA_OIDC_CLIENT_SECRET}",
             "pkce": true,
