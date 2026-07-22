@@ -10,6 +10,7 @@ services:
     container_name: papra
     environment:
       - APP_BASE_URL=${APP_BASE_URL}
+      - TRUSTED_ORIGINS=${TRUSTED_ORIGINS}
       - DOCUMENT_STORAGE_DRIVER=${DOCUMENT_STORAGE_DRIVER}
       - AI_IS_ENABLED=${AI_IS_ENABLED}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
