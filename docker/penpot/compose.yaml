@@ -1,0 +1,132 @@
+#-[ PROJECT NAME
+name: penpot
+# https://penpot.app/
+# https://github.com/penpot/penpot
+
+services:
+  # Penpot - Photoshop / Canva / Figma Alternative
+  penpot-frontend:
+    image: penpotapp/frontend:${PENPOT_IMAGE_VERSION}
+    container_name: penpot-frontend
+    depends_on:
+      penpot-postgres:
+        condition: service_healthy
+      penpot-valkey:
+        condition: service_healthy
+    environment:
+      - PENPOT_FLAGS=${PENPOT_FLAGS}
+      - PENPOT_HTTP_SERVER_MAX_BODY_SIZE=${PENPOT_HTTP_SERVER_MAX_BODY_SIZE}
+      - PENPOT_PUBLIC_URI=${PENPOT_PUBLIC_URI}
+      - PENPOT_OIDC_NAME=${PENPOT_OIDC_NAME}
+      - PENPOT_OIDC_BASE_URI=${PENPOT_OIDC_BASE_URI}
+      - PENPOT_OIDC_CLIENT_ID=${PENPOT_OIDC_CLIENT_ID}
+      - PENPOT_OIDC_CLIENT_SECRET=${PENPOT_OIDC_CLIENT_SECRET}
+      - PENPOT_OIDC_SCOPES=${PENPOT_OIDC_SCOPES}
+      - PENPOT_OIDC_ROLES_ATTR=${PENPOT_OIDC_ROLES_ATTR}
+      - PENPOT_OIDC_ROLES=${PENPOT_OIDC_ROLES}
+    networks:
+      # Default Port: 8080
+      - cloudflare-ingress
+      - penpot-backend
+    restart: unless-stopped
+    volumes:
+      - penpot.assets:/opt/data/assets
+
+  penpot-backend:
+    image: penpotapp/backend:${PENPOT_IMAGE_VERSION}
+    container_name: penpot-backend
+    depends_on:
+      penpot-postgres:
+        condition: service_healthy
+      penpot-valkey:
+        condition: service_healthy
+    environment:
+      - PENPOT_FLAGS=${PENPOT_FLAGS}
+      - PENPOT_HTTP_SERVER_MAX_BODY_SIZE=${PENPOT_HTTP_SERVER_MAX_BODY_SIZE}
+      - PENPOT_PUBLIC_URI=${PENPOT_PUBLIC_URI}
+      - PENPOT_SECRET_KEY=${PENPOT_SECRET_KEY}
+      - PENPOT_DATABASE_URI=${PENPOT_DATABASE_URI}
+      - PENPOT_DATABASE_USERNAME=${PENPOT_DATABASE_USERNAME}
+      - PENPOT_DATABASE_PASSWORD=${PENPOT_DATABASE_PASSWORD}
+      - PENPOT_REDIS_URI=${PENPOT_REDIS_URI}
+      - PENPOT_OBJECTS_STORAGE_BACKEND=${PENPOT_OBJECTS_STORAGE_BACKEND}
+      - PENPOT_OBJECTS_STORAGE_FS_DIRECTORY=${PENPOT_OBJECTS_STORAGE_FS_DIRECTORY}
+      - PENPOT_TELEMETRY_ENABLED=${PENPOT_TELEMETRY_ENABLED}
+      - PENPOT_TELEMETRY_REFERRER=${PENPOT_TELEMETRY_REFERRER}
+      - PENPOT_OIDC_NAME=${PENPOT_OIDC_NAME}
+      - PENPOT_OIDC_BASE_URI=${PENPOT_OIDC_BASE_URI}
+      - PENPOT_OIDC_CLIENT_ID=${PENPOT_OIDC_CLIENT_ID}
+      - PENPOT_OIDC_CLIENT_SECRET=${PENPOT_OIDC_CLIENT_SECRET}
+      - PENPOT_OIDC_SCOPES=${PENPOT_OIDC_SCOPES}
+      - PENPOT_OIDC_ROLES_ATTR=${PENPOT_OIDC_ROLES_ATTR}
+      - PENPOT_OIDC_ROLES=${PENPOT_OIDC_ROLES}
+    networks:
+      - penpot-backend
+    restart: unless-stopped
+    volumes:
+      - penpot.assets:/opt/data/assets
+
+  penpot-exporter:
+    image: penpotapp/exporter:${PENPOT_IMAGE_VERSION}
+    container_name: penpot-exporter
+    depends_on:
+      penpot-valkey:
+        condition: service_healthy
+    environment:
+      - PENPOT_INTERNAL_URL=${PENPOT_INTERNAL_URI}
+      - PENPOT_REDIS_URI=${PENPOT_REDIS_URI}
+    networks:
+      - penpot-backend
+    restart: unless-stopped
+
+  # Postgres - SQL Database
+  penpot-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: penpot-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - penpot-backend
+    restart: unless-stopped
+    volumes:
+      - penpot-postgres.data:/var/lib/postgresql/data
+
+  # Valkey - Key/Value Store Forked from Redis
+  penpot-valkey:
+    image: valkey/valkey:${VALKEY_IMAGE_TAG}
+    container_name: penpot-valkey
+    environment:
+      - VALKEY_EXTRA_FLAGS=${VALKEY_EXTRA_FLAGS}
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+    networks:
+      - penpot-backend
+    restart: unless-stopped
+    volumes:
+      - penpot-valkey.data:/data
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  penpot-backend:
+    driver: bridge
+    name: penpot-backend
+
+volumes:
+  penpot.assets:
+    name: penpot.assets
+  penpot-postgres.data:
+    name: penpot-postgres.data
+  penpot-valkey.data:
+    name: penpot-valkey.data
