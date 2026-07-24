@@ -6,12 +6,32 @@ name: termix
 services:
   # Termix - Self-hosted SSH and remote desktop management
   termix:
-    image: ghcr.io/lukegus/termix:${TERMIX_IMAGE_TAG:-latest}
+    image: ghcr.io/lukegus/termix:${TERMIX_IMAGE_TAG}
     container_name: termix
     depends_on:
       - termix-guacd
     environment:
-      - PORT=8080
+      - PORT=${PORT}
+      - GUACD_HOST=${GUACD_HOST}
+      - GUACD_PORT=${GUACD_PORT}
+      - NODE_ENV=${NODE_ENV}
+      - PUID=${PUID}
+      - GUID=${GUID}
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_KEY=${DATABASE_KEY}
+      - INTERNAL_AUTH_TOKEN=${INTERNAL_AUTH_TOKEN}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - OIDC_ISSUER_URL=${OIDC_ISSUER_URL}
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET}
+      - OIDC_SCOPES=${OIDC_SCOPES}
+      - OIDC_ADMIN_GROUP=${OIDC_ADMIN_GROUP}
+      - OIDC_GROUP_CLAIM=${OIDC_GROUP_CLAIM}
+      - OIDC_FORCE_HTTPS=${OIDC_FORCE_HTTPS}
+      - OIDC_ALLOW_REGISTRATION=${OIDC_ALLOW_REGISTRATION}
+      - ALLOW_REGISTRATION=${ALLOW_REGISTRATION}
+      - ALLOW_PASSWORD_LOGIN=${ALLOW_PASSWORD_LOGIN}
+      - ALLOW_PASSWORD_RESET=${ALLOW_PASSWORD_RESET}
     networks:
       # Default Port: 8080
       - cloudflare-ingress
@@ -22,7 +42,7 @@ services:
 
   # Guacamole - Open Source RDP
   termix-guacd:
-    image: guacamole/guacd:${GUACD_IMAGE_TAG:-1.6.0}     # 1.6.0
+    image: guacamole/guacd:${GUACD_IMAGE_TAG}
     container_name: termix-guacd
     networks:
       # Default Port: 4822
