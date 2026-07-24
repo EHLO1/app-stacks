@@ -1,0 +1,34 @@
+#-[ PROJECT NAME
+name: beszel
+# https://beszel.dev
+# https://github.com/henrygd/beszel
+
+services:
+  # Beszel - System Monitoring
+  beszel:
+    image: henrygd/beszel:${BESZEL_IMAGE_TAG}
+    container_name: beszel
+    environment:
+      - APP_URL=${APP_URL}
+      - CHECK_UPDATES=${CHECK_UPDATES}
+      - USER_CREATION=${USER_CREATION}
+    healthcheck:
+      test: ['CMD', '/beszel', 'health', '--url', 'http://localhost:8090']
+      interval: 120s
+      start_period: 10s
+      timeout: 5s
+    networks:
+      # Default Port: 8090
+      - cloudflare-ingress
+    restart: unless-stopped
+    volumes:
+      - beszel.data:/beszel_data
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+
+volumes:
+  beszel.data:
+    name: beszel.data
