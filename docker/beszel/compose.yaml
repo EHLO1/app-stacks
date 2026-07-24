@@ -11,7 +11,7 @@ services:
     environment:
       - APP_URL=${APP_URL}
       - CHECK_UPDATES=${CHECK_UPDATES}
-      - USER_CREATION=${USER_CREATION}
+      # - USER_CREATION=${USER_CREATION}
     healthcheck:
       test: ['CMD', '/beszel', 'health', '--url', 'http://localhost:8090']
       interval: 120s
