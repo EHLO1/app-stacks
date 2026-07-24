@@ -73,7 +73,9 @@ services:
       penpot-valkey:
         condition: service_healthy
     environment:
-      - PENPOT_INTERNAL_URL=${PENPOT_INTERNAL_URI}
+      - PENPOT_PUBLIC_URI=${PENPOT_PUBLIC_URI}
+      - PENPOT_INTERNAL_URI=${PENPOT_INTERNAL_URI}
+      - PENPOT_SECRET_KEY=${PENPOT_SECRET_KEY}
       - PENPOT_REDIS_URI=${PENPOT_REDIS_URI}
     networks:
       - penpot-backend
