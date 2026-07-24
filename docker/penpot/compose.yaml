@@ -6,7 +6,7 @@ name: penpot
 services:
   # Penpot - Photoshop / Canva / Figma Alternative
   penpot-frontend:
-    image: penpotapp/frontend:${PENPOT_IMAGE_VERSION}
+    image: penpotapp/frontend:${PENPOT_IMAGE_TAG}
     container_name: penpot-frontend
     depends_on:
       penpot-postgres:
@@ -33,7 +33,7 @@ services:
       - penpot.assets:/opt/data/assets
 
   penpot-backend:
-    image: penpotapp/backend:${PENPOT_IMAGE_VERSION}
+    image: penpotapp/backend:${PENPOT_IMAGE_TAG}
     container_name: penpot-backend
     depends_on:
       penpot-postgres:
@@ -52,7 +52,7 @@ services:
       - PENPOT_OBJECTS_STORAGE_BACKEND=${PENPOT_OBJECTS_STORAGE_BACKEND}
       - PENPOT_OBJECTS_STORAGE_FS_DIRECTORY=${PENPOT_OBJECTS_STORAGE_FS_DIRECTORY}
       - PENPOT_TELEMETRY_ENABLED=${PENPOT_TELEMETRY_ENABLED}
-      - PENPOT_TELEMETRY_REFERRER=${PENPOT_TELEMETRY_REFERRER}
+      - PENPOT_TELEMETRY_REFERER=${PENPOT_TELEMETRY_REFERRER}
       - PENPOT_OIDC_NAME=${PENPOT_OIDC_NAME}
       - PENPOT_OIDC_BASE_URI=${PENPOT_OIDC_BASE_URI}
       - PENPOT_OIDC_CLIENT_ID=${PENPOT_OIDC_CLIENT_ID}
@@ -67,7 +67,7 @@ services:
       - penpot.assets:/opt/data/assets
 
   penpot-exporter:
-    image: penpotapp/exporter:${PENPOT_IMAGE_VERSION}
+    image: penpotapp/exporter:${PENPOT_IMAGE_TAG}
     container_name: penpot-exporter
     depends_on:
       penpot-valkey:
