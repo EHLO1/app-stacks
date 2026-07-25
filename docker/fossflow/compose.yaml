@@ -1,0 +1,29 @@
+#-[ PROJECT NAME
+name: fossflow
+# https://github.com/victortassinari/FossFLOW
+
+services:
+  # FossFLOW - Isometric Diagramming Tool
+  fossflow:
+    image: stnsmith/fossflow:${FOSSFLOW_IMAGE_TAG:-latest}
+    container_name: fossflow
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - ENABLE_SERVER_STORAGE=${ENABLE_SERVER_STORAGE:-true}
+      - STORAGE_PATH=${STORAGE_PATH:-/data/diagrams}
+      - ENABLE_GIT_BACKUP=${ENABLE_GIT_BACKUP:-false}
+    networks:
+      # Default Port: 80
+      - cloudflare-ingress
+    restart: unless-stopped
+    volumes:
+      - fossflow.diagrams:/data/diagrams
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+
+volumes:
+  fossflow.diagrams:
+    name: fossflow.diagrams
