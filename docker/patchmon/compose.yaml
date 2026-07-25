@@ -1,0 +1,117 @@
+#-[ PROJECT NAME
+name: patchmon
+# https://patchmon.net/
+# https://github.com/PatchMon/PatchMon
+
+services:
+  # Postgres - SQL Database
+  patchmon-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: patchmon-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    networks:
+      - patchmon-backend
+    restart: unless-stopped
+    volumes:
+      - patchmon-postgres.data:/var/lib/postgresql/data
+
+  # Valkey - Key/Value Store
+  patchmon-valkey:
+    image: valkey/valkey:${VALKEY_IMAGE_TAG}
+    container_name: patchmon-valkey
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    networks:
+      - patchmon-backend
+    restart: unless-stopped
+    volumes:
+      - patchmon-valkey.data:/data
+
+  # Apache Guacd - Remote Desktop / Remote Sessions
+  patchmon-guacd:
+    image: guacamole/guacd:${GUACD_IMAGE_TAG}
+    container_name: patchmon-guacd
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 4822 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+    networks:
+      # Default Port: 4822
+      - patchmon-backend
+    tmpfs:
+      - /tmp:size=64m
+
+  # PatchMon - Host Patch Management Platform
+  patchmon:
+    image: ghcr.io/patchmon/patchmon-server:${PATCHMON_IMAGE_TAG}
+    container_name: patchmon
+    depends_on:
+      patchmon-postgres:
+        condition: service_healthy
+      patchmon-valkey:
+        condition: service_healthy
+      patchmon-guacd:
+        condition: service_healthy
+    environment:
+      - 
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    networks:
+      # Default Port: 3000
+      - cloudflare-ingress
+      - patchmon-backend
+    restart: unless-stopped
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  patchmon-backend:
+    driver: bridge
+    name: patchmon-backend
+
+volumes:
+  patchmon-postgres.data:
+    name: patchmon-postgres.data
+  patchmon-valkey.data:
+    name: patchmon-valkey.data
