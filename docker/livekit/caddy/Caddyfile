@@ -1,0 +1,9 @@
+{$BASE_URL} {
+    tls {
+        issuer acme {
+            email {$SSL_EMAIL}
+            dns cloudflare {$CLOUDFLARE_API_TOKEN}
+        }
+    }
+    reverse_proxy 127.0.0.1:7880
+}

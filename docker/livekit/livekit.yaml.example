@@ -1,0 +1,25 @@
+port: 7880
+bind_addresses:
+  - ""
+
+rtc:
+  tcp_port: 7881
+  port_range_start: 51000
+  port_range_end: 60000
+  use_external_ip: true
+
+turn:
+  enabled: true
+  udp_port: 3478
+  domain: livekit.example.com
+
+keys:
+  app_name: 123thisisasupersecurekey
+
+webhook:
+  urls:
+    - https://chat.example.com/webhooks/livekit
+  api_key: app_name
+
+logging:
+  level: info

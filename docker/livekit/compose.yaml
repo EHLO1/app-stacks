@@ -1,0 +1,40 @@
+#-[ PROJECT NAME
+name: livekit
+# https://livekit.com/
+# https://github.com/livekit/livekit
+
+services:
+  # LiveKit - TURN, Voice, Video
+  livekit:
+    image: livekit/livekit-server:${LIVEKIT_IMAGE_TAG:-latest}
+    container_name: livekit
+    depends_on:
+      - livekit-caddy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7880"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    environment:
+      - LIVEKIT_CONFIG=${LIVEKIT_CONFIG}
+    restart: unless-stopped
+    network_mode: host
+
+  livekit-caddy:
+    build:
+      context: .
+      dockerfile: ./caddy/Dockerfile
+    container_name: livekit-caddy
+    environment:
+      - BASE_URL=${BASE_URL}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - SSL_EMAIL=${SSL_EMAIL}
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy.data:/data
+
+volumes:
+  caddy.data:
+    name: caddy.data
