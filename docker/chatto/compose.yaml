@@ -28,7 +28,7 @@ services:
     image: ghcr.io/chattocorp/chatto:${CHATTO_IMAGE_TAG}
     container_name: chatto
     depends_on:
-      nats:
+      chatto-nats:
         condition: service_healthy
     environment:
       - PUID=${PUID}
