@@ -1,0 +1,57 @@
+#-[ PROJECT NAME
+name: homebox
+# https://homebox.software
+# https://github.com/sysadminsmedia/homebox
+
+services:
+  # Postgres - SQL Database
+  homebox-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: homebox-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - homebox-backend
+    restart: unless-stopped
+    volumes:
+      - homebox-postgres.data:/var/lib/postgresql/data
+
+  # HomeBox - Simple home inventory management
+  homebox:
+    image: ghcr.io/sysadminsmedia/homebox:${HOMEBOX_IMAGE_TAG}
+    container_name: homebox
+    depends_on:
+      homebox-postgres:
+        condition: service_healthy
+    environment:
+      - 
+    networks:
+      # Default Port: 7745
+      - cloudflare-ingress
+      - homebox-backend
+    restart: unless-stopped
+    volumes:
+    - homebox.data:/data/
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  homebox-backend:
+    driver: bridge
+    name: homebox-backend
+
+volumes:
+  homebox-postgres.data:
+    name: homebox-postgres.data
+  homebox.data:
+    name: homebox.data
