@@ -6,7 +6,7 @@ name: bentopdf
 services:
    # BentoPDF - Free and FOSS PDF Tools
   bentopdf:
-    image: ghcr.io/ehlo1/bentopdf:${BENTOPDF_IMAGE_TAG:-latest-custom}
+    image: ghcr.io/alam00000/bentopdf-simple:${BENTOPDF_IMAGE_TAG:-latest}
     container_name: bentopdf
     networks:
       # Default Port: 8080
