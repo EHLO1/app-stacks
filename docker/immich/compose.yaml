@@ -1,0 +1,75 @@
+#-[ PROJECT NAME
+name: immich
+# https://immich.app/
+# https://github.com/immich-app/immich
+
+services:
+  # Postgres - SQL Database
+  immich-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: immich-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - immich-backend
+    restart: unless-stopped
+    volumes:
+      - immich-postgres.data:/var/lib/postgresql/data
+
+  # Valkey - Key/Value Store
+  immich-valkey:
+    image: valkey/valkey:${VALKEY_IMAGE_TAG}
+    container_name: immich-valkey
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+    networks:
+      - immich-backend
+    restart: unless-stopped
+    volumes:
+      - immich-valkey.data:/data
+
+  # Immich - Replacement for Google/Apple Photos
+  immich:
+    image: ghcr.io/immich-app/immich-server:${IMMICH_SERVER_IMAGE_TAG}
+    container_name: immich
+    depends_on:
+      immich-postgres:
+        condition: service_healthy
+      immich-valkey:
+        condition: service_healthy
+    environment:
+      - 
+    networks:
+      - cloudflare-ingress
+      - immich-backend
+    restart: unless-stopped
+    volumes:
+    - immich.data:/data
+    - /etc/localtime:/etc/localtime:ro
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  immich-backend:
+    driver: bridge
+    name: immich-backend
+
+volumes:
+  immich-postgres.data:
+    name: immich-postgres.data
+  immich-valkey.data:
+    name: immich-valkey.data
+  immich.data:
+    name: immich.data
