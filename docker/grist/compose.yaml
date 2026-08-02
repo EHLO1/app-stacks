@@ -1,0 +1,78 @@
+#-[ PROJECT NAME
+name: grist
+# https://www.getgrist.com/
+# https://github.com/gristlabs/grist-core
+
+services:
+  # Postgres - SQL Database
+  grist-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: grist-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - grist-backend
+    restart: unless-stopped
+    volumes:
+      - grist-postgres.data:/var/lib/postgresql/data
+
+  # Valkey - Key/Value Store
+  grist-valkey:
+    image: valkey/valkey:${VALKEY_IMAGE_TAG}
+    container_name: grist-valkey
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+    networks:
+      - grist-backend
+    restart: unless-stopped
+    volumes:
+      - grist-valkey.data:/data
+
+  # Grist - Excel + Database
+  grist:
+    image: gristlabs/grist:${GRIST_IMAGE_TAG}
+    container_name: grist
+    cap_add:
+      # Required for gVisor sandboxing
+      - SYS_PTRACE
+    depends_on:
+      grist-postgres:
+        condition: service_healthy
+      grist-valkey:
+        condition: service_healthy
+    environment:
+      - 
+    networks:
+      # Default Port: 8484
+      - cloudflare-ingress
+      - grist-backend
+    restart: unless-stopped
+    volumes:
+    - grist.data:/persist
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  grist-backend:
+    driver: bridge
+    name: grist-backend
+
+volumes:
+  grist-postgres.data:
+    name: grist-postgres.data
+  grist-valkey.data:
+    name: grist-valkey.data
+  grist.data:
+    name: grist.data
