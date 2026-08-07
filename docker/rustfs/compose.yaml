@@ -1,0 +1,53 @@
+#-[ PROJECT NAME
+name: rustfs
+# https://rustfs.com/
+# https://github.com/rustfs/rustfs
+
+services:
+  # RustFS - S3 Storage
+  rustfs:
+    image: rustfs/rustfs:${RUSTFS_IMAGE_TAG}
+    container_name: rustfs
+    environment:
+      - 
+    networks:
+      - cloudflare-ingress
+      - rustfs-internal
+    restart: unless-stopped
+    volumes:
+      - rustfs.data:/data
+
+  # Caddy - Reverse Proxy
+  rustfs-caddy:
+    build:
+      context: .
+      dockerfile: ./caddy/Dockerfile
+    container_name: rustfs-caddy
+    environment:
+      - BASE_URL=${BASE_URL}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - SSL_EMAIL=${SSL_EMAIL}
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+    networks:
+      - rustfs-internal
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - rustfs-caddy.data:/data
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Local Network Proxied by Caddy with Let's Encrypt
+  rustfs-internal:
+    driver: bridge
+    name: rustfs-internal
+
+volumes:
+  rustfs.data:
+    name: rustfs.data
+  rustfs-caddy.data:
+    name: rustfs-caddy.data

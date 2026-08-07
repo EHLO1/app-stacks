@@ -1,0 +1,81 @@
+#-[ PROJECT NAME
+name: reactive-resume
+# https://rxresu.me/
+# https://github.com/amruthpillai/reactive-resume
+
+services:
+  # Postgres - SQL Database
+  reactive-resume-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: reactive-resume-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - reactive-resume-backend
+    restart: unless-stopped
+    volumes:
+      - reactive-resume-postgres.data:/var/lib/postgresql/data
+
+  # Valkey - Key/Value Store
+  reactive-resume-valkey:
+    image: valkey/valkey:${VALKEY_IMAGE_TAG}
+    container_name: reactive-resume-valkey
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+    networks:
+      - reactive-resume-backend
+    restart: unless-stopped
+    volumes:
+      - reactive-resume-valkey.data:/data
+
+  # Reactive Resume - OSS Resume Build Tool
+  reactive-resume:
+    image: amruthpillai/reactive-resume:${REACTIVE_RESUME_IMAGE_TAG}
+    container_name: reactive-resume
+    depends_on:
+      reactive-resume-postgres:
+        condition: service_healthy
+      reactive-resume-valkey:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - 
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1));"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      # Default Port: 3000
+      - cloudflare-ingress
+      - reactive-resume-backend
+    restart: unless-stopped
+    volumes:
+    - reactive-resume.data:/app/data
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  reactive-resume-backend:
+    driver: bridge
+    name: reactive-resume-backend
+
+volumes:
+  reactive-resume-postgres.data:
+    name: reactive-resume-postgres.data
+  reactive-resume-valkey.data:
+    name: reactive-resume-valkey.data
+  reactive-resume.data:
+    name: reactive-resume.data
