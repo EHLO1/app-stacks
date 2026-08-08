@@ -49,7 +49,22 @@ services:
         condition: service_healthy
     environment:
       - REDIS_URL=${REDIS_URL}
-      - 
+      - APP_URL=${APP_URL}
+      - TZ=${TZ}
+      - DATABASE_URL=${DATABASE_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - ENCRYPTION_SECRET=${ENCRYPTION_SECRET}
+      - S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
+      - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
+      - S3_REGION=${S3_REGION}
+      - S3_ENDPOINT=${S3_ENDPOINT}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_FORCE_PATH_STYLE=${S3_FORCE_PATH_STYLE}
+      - FLAG_DISABLE_EMAIL_AUTH=${FLAG_DISABLE_EMAIL_AUTH}
+      - OAUTH_PROVIDER_NAME=${OAUTH_PROVIDER_NAME}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - OAUTH_DISCOVERY_URL=${OAUTH_DISCOVERY_URL}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1));"]
       interval: 30s
@@ -60,8 +75,6 @@ services:
       - cloudflare-ingress
       - reactive-resume-backend
     restart: unless-stopped
-    volumes:
-    - reactive-resume.data:/app/data
 
 networks:
   # Public / External Network (Cloudflare Tunnel)
@@ -77,5 +90,3 @@ volumes:
     name: reactive-resume-postgres.data
   reactive-resume-valkey.data:
     name: reactive-resume-valkey.data
-  reactive-resume.data:
-    name: reactive-resume.data
