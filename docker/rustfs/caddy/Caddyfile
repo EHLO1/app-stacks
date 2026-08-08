@@ -1,19 +1,10 @@
-*.rustfs.jjcasa.net {
+{$BASE_URL} {
     tls {
         issuer acme {
             email {$SSL_EMAIL}
             dns cloudflare {$CLOUDFLARE_API_TOKEN}
         }
+        resolvers 1.1.1.1 1.0.0.1
     }
     reverse_proxy rustfs:9000
-}
-
-rustfs.jjcasa.net {
-    tls {
-        issuer acme {
-            email {$SSL_EMAIL}
-            dns cloudflare {$CLOUDFLARE_API_TOKEN}
-        }
-    }
-    reverse_proxy rustfs:9001
 }
