@@ -1,0 +1,77 @@
+#-[ PROJECT NAME
+name: portabase
+# https://portabase.io/
+# https://github.com/Portabase/portabase
+
+services:
+  # Postgres - SQL Database
+  portabase-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: portabase-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - portabase-backend
+    restart: unless-stopped
+    volumes:
+      - portabase-postgres.data:/var/lib/postgresql/data
+
+  # Portabase - Database & Docker Volume Backups, With Agents! (Not AI)
+  portabase:
+    image: portabase/portabase:${OUTLINE_IMAGE_TAG}
+    container_name: portabase
+    depends_on:
+      portabase-postgres:
+        condition: service_healthy
+    environment:
+      - PROJECT_URL=${PROJECT_URL}
+      - TUSD_BEHIND_PROXY=${TUSD_BEHIND_PROXY}
+      - API_ENABLED=${API_ENABLED}
+      - OPENAPI_ENABLED=${OPENAPI_ENABLED}
+      - DATABASE_URL=${DATABASE_URL}
+      - PROJECT_SECRET=${PROJECT_SECRET}
+      - TZ=${TZ}
+      - SKIP_ONBOARDING=${SKIP_ONBOARDING}
+      - AUTH_EMAIL_PASSWORD_ENABLE=${AUTH_EMAIL_PASSWORD_ENABLED}
+      - AUTH_SIGNUP_ENABLED=${AUTH_SIGNUP_ENABLED}
+      - AUTH_OIDC_POCKET_ID=${AUTH_OIDC_POCKET_ID}
+      - AUTH_OIDC_POCKET_TITLE=${AUTH_OIDC_POCKET_TITLE}
+      - AUTH_OIDC_POCKET_DESC=${AUTH_OIDC_POCKET_DESC}
+      - AUTH_OIDC_POCKET_ICON=${AUTH_OIDC_POCKET_ICON}
+      - AUTH_OIDC_POCKET_CLIENT=${AUTH_OIDC_POCKET_CLIENT}
+      - AUTH_OIDC_POCKET_SECRET=${AUTH_OIDC_POCKET_SECRET}
+      - AUTH_OIDC_POCKET_ISSUER_URL=${AUTH_OIDC_POCKET_ISSUER_URL}
+      - AUTH_OIDC_POCKET_SCOPES=${AUTH_OIDC_POCKET_SCOPES}
+      - AUTH_OIDC_POCKET_PKCE=${AUTH_OIDC_POCKET_PKCE}
+      - AUTH_OIDC_POCKET_ROLE_MAP=${AUTH_OIDC_POCKET_ROLE_MAP}
+      - AUTH_OIDC_POCKET_ALLOW_UNLINKING=${AUTH_OIDC_POCKET_ALLOW_UNLINKING}
+    networks:
+      # Default Port: 80
+      - cloudflare-ingress
+      - portabase-backend
+    restart: unless-stopped
+    volumes:
+    - portabase.data:/data
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  portabase-backend:
+    driver: bridge
+    name: portabase-backend
+
+volumes:
+  portabase-postgres.data:
+    name: portabase-postgres.data
+  portabase.data:
+    name: portabase.data
