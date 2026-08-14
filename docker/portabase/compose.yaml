@@ -33,6 +33,7 @@ services:
         condition: service_healthy
     environment:
       - PROJECT_URL=${PROJECT_URL}
+      - TRUSTED_DOMAINS=${TRUSTED_DOMAINS}
       - TUSD_BEHIND_PROXY=${TUSD_BEHIND_PROXY}
       - API_ENABLED=${API_ENABLED}
       - OPENAPI_ENABLED=${OPENAPI_ENABLED}
