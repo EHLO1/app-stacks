@@ -1,0 +1,14 @@
+{
+  "databases": [
+    {
+      "name": "app-postgres",
+      "database": "db-name",
+      "type": "postgresql",
+      "host": "app-postgres",
+      "port": 5432,
+      "username": "${APP_POSTGRES_USER}",
+      "password": "${APP_POSTGRES_PASSWORD}",
+      "generated_id": "generate-a-v4-uuid"
+    }
+  ]
+}
