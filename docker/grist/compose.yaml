@@ -20,9 +20,26 @@ services:
       start_period: 30s
     networks:
       - grist-backend
+      - grist-postgres-backup
     restart: unless-stopped
     volumes:
       - grist-postgres.data:/var/lib/postgresql/data
+
+  # Portabase Agent - Postgres Backups
+  grist-portabase-agent:
+    image: portabase/agent:${PORTABASE_AGENT_IMAGE_TAG:-latest}
+    container_name: grist-portabase-agent
+    environment:
+      - TZ=${TZ:-America/Chicago}
+      - POLLING=${POLLING:-5}
+      - APP_ENV=${APP_ENV:-production}
+      - LOG=${LOG:-info}
+      - EDGE_KEY=${EDGE_KEY}
+    restart: unless-stopped
+    networks:
+      - grist-postgres-backup
+    volumes:
+      - ./portabase-agent/config.json:/config/config.json:ro
 
   # Valkey - Key/Value Store
   grist-valkey:
@@ -87,6 +104,10 @@ networks:
   grist-backend:
     driver: bridge
     name: grist-backend
+  # Network for Backups (Not Accessible Externally)
+  grist-postgres-backup:
+    driver: bridge
+    name: grist-postgres-backup
 
 volumes:
   grist-postgres.data:

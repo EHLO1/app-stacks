@@ -1,0 +1,14 @@
+{
+  "databases": [
+    {
+      "name": "grist-postgres",
+      "database": "grist",
+      "type": "postgresql",
+      "host": "grist-postgres",
+      "port": 5432,
+      "username": "{{.GRIST_POSTGRES_USER}}",
+      "password": "{{.GRIST_POSTGRES_PASSWORD}}",
+      "generated_id": "01a00ad9-bc6a-759d-83ae-151bbf76e4a8"
+    }
+  ]
+}

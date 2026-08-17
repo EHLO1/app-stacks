@@ -1,0 +1,14 @@
+{
+  "databases": [
+    {
+      "name": "reactive-resume-postgres",
+      "database": "reactive-resume",
+      "type": "postgresql",
+      "host": "reactive-resume-postgres",
+      "port": 5432,
+      "username": "{{.REACTIVE_RESUME_POSTGRES_USER}}",
+      "password": "{{.REACTIVE_RESUME_POSTGRES_PASSWORD}}",
+      "generated_id": "01a00ad6-34c3-76c9-b384-fb5b07a3e5f4"
+    }
+  ]
+}

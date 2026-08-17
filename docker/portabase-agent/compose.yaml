@@ -4,9 +4,9 @@ name: portabase-agent
 # https://github.com/Portabase/agent
 
 services:
-  portabase-agent:
+  app-portabase-agent:
     image: portabase/agent:${PORTABASE_AGENT_IMAGE_TAG:-latest}
-    container_name: portabase-agent
+    container_name: app-portabase-agent
     environment:
       - TZ=${TZ:-America/Chicago}
       - POLLING=${POLLING:-5}
@@ -17,9 +17,9 @@ services:
     networks:
       - app-postgres-backup
     volumes:
-      - ./config.json:/config/config.json
+      - ./config.json:/config/config.json:ro
 
 networks:
-  portabase:
+  app-postgres-backup:
     driver: bridge
     name: app-postgres-backup
