@@ -39,7 +39,7 @@ services:
     networks:
       - outline-postgres-backup
     volumes:
-      - ./portabase-agent/config.json:/config/config.json:ro
+      - ./portabase-agent/config.json:/config/config.json
 
   # Valkey - Key/Value Store
   outline-valkey:
