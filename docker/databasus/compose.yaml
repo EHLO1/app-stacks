@@ -1,0 +1,30 @@
+#-[ PROJECT NAME
+name: databasus
+# https://databasus.com/
+# https://github.com/databasus/databasus
+
+services:
+  databasus:
+    image: databasus/databasus:${DATABASUS_IMAGE_TAG:-latest}
+    container_name: databasus
+    healthcheck:
+      test: ["CMD", "databasus", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      # Default Port: 4005
+      - cloudflare-ingress
+    volumes:
+      - databasus.data:/databasus-data
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+
+volumes:
+  databasus.data:
+    name: databasus.data
