@@ -17,12 +17,16 @@ services:
     networks:
       # Default Port: 4005
       - cloudflare-ingress
+      - backup-net
     volumes:
       - databasus.data:/databasus-data
 
 networks:
   # Public / External Network (Cloudflare Tunnel)
   cloudflare-ingress:
+    external: true
+  # Internal Network for Backups (Not Accessible Externally)
+  backup-net:
     external: true
 
 volumes:

@@ -16,26 +16,10 @@ services:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     networks:
       - komodo-backend
-      - komodo-postgres-backup
+      - backup-net
     restart: unless-stopped
     volumes:
       - komodo-postgres.data:/var/lib/postgresql/data
-
-  # Portabase Agent - Postgres Backups
-  komodo-portabase-agent:
-    image: portabase/agent:${PORTABASE_AGENT_IMAGE_TAG:-latest}
-    container_name: komodo-portabase-agent
-    environment:
-      - TZ=${TZ:-America/Chicago}
-      - POLLING=${POLLING:-5}
-      - APP_ENV=${APP_ENV:-production}
-      - LOG=${LOG:-info}
-      - EDGE_KEY=${EDGE_KEY}
-    restart: unless-stopped
-    networks:
-      - komodo-postgres-backup
-    volumes:
-      - ./portabase-agent/config.json:/config/config.json:ro
 
   # FerretDB - MongoDB Adapter for Postgres With DocumentDB
   komodo-ferretdb:
@@ -128,10 +112,9 @@ networks:
   komodo-backend:
     driver: bridge
     name: komodo-backend
-  # Network for Backups (Not Accessible Externally)
-  komnodo-postgres-backup:
-    driver: bridge
-    name: komodo-postgres-backup
+  # Internal Network for Backups (Not Accessible Externally)
+  backup-net:
+    external: true
 
 volumes:
   komodo-postgres.data:

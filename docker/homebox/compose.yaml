@@ -20,6 +20,7 @@ services:
       start_period: 30s
     networks:
       - homebox-backend
+      - backup-net
     restart: unless-stopped
     volumes:
       - homebox-postgres.data:/var/lib/postgresql/data
@@ -79,6 +80,9 @@ networks:
   homebox-backend:
     driver: bridge
     name: homebox-backend
+  # Internal Network for Backups (Not Accessible Externally)
+  backup-net:
+    external: true
 
 volumes:
   homebox-postgres.data:

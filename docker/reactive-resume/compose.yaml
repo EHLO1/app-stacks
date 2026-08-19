@@ -20,26 +20,10 @@ services:
       start_period: 30s
     networks:
       - reactive-resume-backend
-      - reactive-resume-postgres-backup
+      - backup-net
     restart: unless-stopped
     volumes:
       - reactive-resume-postgres.data:/var/lib/postgresql/data
-
-  # Portabase Agent - Postgres Backups
-  reactive-resume-portabase-agent:
-    image: portabase/agent:${PORTABASE_AGENT_IMAGE_TAG:-latest}
-    container_name: reactive-resume-portabase-agent
-    environment:
-      - TZ=${TZ:-America/Chicago}
-      - POLLING=${POLLING:-5}
-      - APP_ENV=${APP_ENV:-production}
-      - LOG=${LOG:-info}
-      - EDGE_KEY=${EDGE_KEY}
-    restart: unless-stopped
-    networks:
-      - reactive-resume-postgres-backup
-    volumes:
-      - ./portabase-agent/config.json:/config/config.json:ro
 
   # Valkey - Key/Value Store
   reactive-resume-valkey:
@@ -101,10 +85,9 @@ networks:
   reactive-resume-backend:
     driver: bridge
     name: reactive-resume-backend
-  # Network for Backups (Not Accessible Externally)
-  reactive-resume-postgres-backup:
-    driver: bridge
-    name: reactive-resume-postgres-backup
+  # Internal Network for Backups (Not Accessible Externally)
+  backup-net:
+    external: true
 
 volumes:
   reactive-resume-postgres.data:
