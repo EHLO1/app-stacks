@@ -100,6 +100,7 @@ services:
         max-size: 100m
         max-file: 10
     networks:
+      # Default Port: 9120
       - komodo-cloudflare
     restart: unless-stopped
 
