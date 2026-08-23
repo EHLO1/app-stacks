@@ -68,9 +68,12 @@ services:
       - DATABASE_CONNECTION_POOL_MIN=${DATABASE_CONNECTION_POOL_MIN}
       - DATABASE_CONNECTION_POOL_MAX=${DATABASE_CONNECTION_POOL_MAX}
       - PGSSLMODE=${PGSSLMODE}
-      - FILE_STORAGE=${FILE_STORAGE}
-      - FILE_STORAGE_LOCAL_ROOT_DIR=${FILE_STORAGE_LOCAL_ROOT_DIR}
-      - FILE_STORAGE_UPLOAD_MAX_SIZE=${FILE_STORAGE_UPLOAD_MAX_SIZE}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_UPLOAD_BUCKET_URL=${AWS_S3_UPLOAD_BUCKET_URL}
+      - AWS_S3_UPLOAD_BUCKET_NAME=${AWS_S3_UPLOAD_BUCKET_NAME}
+      - AWS_S3_FORCE_PATH_STYLE=${AWS_S3_FORCE_PATH_STYLE}
       - OIDC_ISSUER_URL=${OIDC_ISSUER_URL}
       - OIDC_CLIENT_ID=${OIDC_CLIENT_ID}
       - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET}
@@ -86,7 +89,11 @@ services:
       - outline-backend
     restart: unless-stopped
     volumes:
-    - outline.data:/var/lib/outline/data
+      - outline.data:/var/lib/outline/data
+    labels:
+      - backup.enabled=true
+      - backup.stop-service=true
+      - backup.volumes=outline.data
 
 networks:
   # Public / External Network (Cloudflare Tunnel)

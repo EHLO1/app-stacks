@@ -47,6 +47,10 @@ services:
     user: 1000:1000
     volumes:
       - papra.data:/app/app-data
+    labels:
+      - backup.enabled=true
+      - backup.stop-service=true
+      - backup.volumes=papra.data
     
 networks:
   # Public / External Network (Cloudflare Tunnel)

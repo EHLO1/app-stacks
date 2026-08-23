@@ -24,6 +24,10 @@ services:
     restart: unless-stopped
     volumes:
       - beszel.data:/beszel_data
+    labels:
+      - backup.enabled=true
+      - backup.stop-service=true
+      - backup.volumes=beszel.data
 
 networks:
   # Public / External Network (Cloudflare Tunnel)

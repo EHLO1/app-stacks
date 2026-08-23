@@ -68,7 +68,10 @@ services:
       - KOMODO_OIDC_CLIENT_SECRET=${KOMODO_OIDC_CLIENT_SECRET}
       - KOMODO_OIDC_USE_FULL_EMAIL=${KOMODO_OIDC_USE_FULL_EMAIL}
     labels:
-      komodo.skip: # Prevent Komodo from stopping with StopAllContainers
+      - komodo.skip # Prevent Komodo from stopping with StopAllContainers
+      - backup.enabled=true
+      - backup.stop-service=false
+      - backup.volumes=komodo.backups,komodo.keys
     networks:
       # Default Port: 9120
       - komodo-cloudflare

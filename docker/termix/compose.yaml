@@ -42,6 +42,10 @@ services:
     restart: unless-stopped
     volumes:
       - termix.data:/app/data
+    labels:
+      - backup.enabled=true
+      - backup.stop-service=true
+      - backup.volumes=termix.data
 
   # Guacamole - Open Source RDP
   termix-guacd:
