@@ -7,4 +7,6 @@
         }
     }
     reverse_proxy rustfs:9000
+
+    header Access-Control-Allow-Private-Network true
 }
