@@ -1,0 +1,70 @@
+#-[ PROJECT NAME
+name: rclone
+# https://rclone.org/
+# https://github.com/rclone/rclone
+
+services:
+  # rclone - Used as a backup and replication system (in my environment)
+  rclone:
+    image: rclone/rclone:${RCLONE_IMAGE_TAG}
+    container_name: rclone
+    command: >
+      sh -c '
+        set -eu
+
+        MARKER=/state/.rclone-initialized
+
+        if [ ! -f "$$MARKER" ]; then
+          echo "========================================"
+          echo "New deployment detected."
+          echo "Restoring data from S3..."
+          echo "========================================"
+
+          if rclone sync "$$RCLONE_S3_URI:$$RCLONE_S3_BUCKET" /data; then
+            echo "Initial restore successful."
+            touch "$$MARKER"
+          else
+            echo "Initial restore failed!"
+            exit 1
+          fi
+        fi
+
+        echo "========================================"
+        echo "Local data is authoritative."
+        echo "Starting normal S3 synchronization."
+        echo "========================================"
+
+        while true; do
+          rclone sync \
+            /data \
+            $$RCLONE_S3_URI:$$RCLONE_S3_BUCKET \
+            --verbose
+
+          sleep 60
+        done
+      '
+  environment:
+    - RCLONE_S3_URI=${RCLONE_S3_URI}
+    - RCLONE_S3_BUCKET=${RCLONE_S3_BUCKET}
+  healthcheck:
+    test: ["CMD-SHELL", "test -f /state/.rclone-initialized"]
+    interval: 5s
+    timeout: 3s
+    retries: 12
+  start_period: 5s
+    restart: unless-stopped
+    volumes:
+      - rclone.config:/config/rclone
+      - rclone.state:/state
+      - app-one.data:/data/app-one
+      - app-two.data:/data/app-two
+
+volumes:
+  rclone.config:
+    name: rclone.config
+  rclone.state:
+    name: rclone.state
+  app-one.data:
+    name: app-one.data
+  app-two.data:
+    name: app-two.data
