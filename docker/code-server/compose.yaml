@@ -20,7 +20,6 @@ services:
       # Default Port: 8443
       - cloudflare-ingress
     restart: unless-stopped
-    user: 1000:1000
     volumes:
       - code-server.config:/config
       - $HOME/code:/workspace
