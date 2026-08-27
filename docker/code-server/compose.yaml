@@ -1,0 +1,35 @@
+#-[ PROJECT NAME
+name: code-server
+# https://coder.com/docs/code-server
+# https://github.com/coder/code-server
+# https://docs.linuxserver.io/images/docker-code-server
+
+services:
+  # code-server - VS Code in the browser. Now with 100% more PWA!
+  code-server:
+    image: lscr.io/linuxserver/code-server:${CODE_SERVER_IMAGE_TAG:-latest}
+    container_name: code-server
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - SUDO_PASSWORD_HASH=${SUDO_PASSWORD_HASH}
+      - DEFAULT_WORKSPACE=${DEFAULT_WORKSPACE}
+      - PWA_APPNAME=${PWA_APPNAME}
+    networks:
+      # Default Port: 8443
+      - cloudflare-ingress
+    restart: unless-stopped
+    user: 1000:1000
+    volumes:
+      - code-server.config:/config
+      - $HOME/code:/workspace
+    
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+
+volumes:
+  code-server.config:
+    name: code-server.config

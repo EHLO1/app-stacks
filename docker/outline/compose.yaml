@@ -90,12 +90,6 @@ services:
       - cloudflare-ingress
       - outline-backend
     restart: unless-stopped
-    volumes:
-      - outline.data:/var/lib/outline/data
-    labels:
-      - backup.enabled=true
-      - backup.stop-service=true
-      - backup.volumes=outline.data
 
 networks:
   # Public / External Network (Cloudflare Tunnel)
@@ -114,5 +108,3 @@ volumes:
     name: outline-postgres.data
   outline-valkey.data:
     name: outline-valkey.data
-  outline.data:
-    name: outline.data
