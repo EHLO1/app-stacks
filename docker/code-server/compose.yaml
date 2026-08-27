@@ -18,7 +18,7 @@ services:
       - PWA_APPNAME=${PWA_APPNAME}
     networks:
       # Default Port: 8443
-      - cloudflare-ingress
+      - mbox-cloudflare
     restart: unless-stopped
     volumes:
       - code-server.config:/config
@@ -26,7 +26,7 @@ services:
     
 networks:
   # Public / External Network (Cloudflare Tunnel)
-  cloudflare-ingress:
+  mbox-cloudflare:
     external: true
 
 volumes:
