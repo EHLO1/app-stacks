@@ -10,3 +10,19 @@ depends_on:
 ```
 
 This will ensure that rclone has completed synchronization and that data is available prior to application stack startup.
+
+Initialization Logic:
+| Local data | Bucket data | Action                                                 |
+| ---------- | ----------- | ------------------------------------------------------ |
+| Empty      | Present     | Restore S3 → local                                     |
+| Empty      | Empty       | Initialize empty stack                                 |
+| Present    | Empty       | Adopt existing local data and sync it to S3            |
+| Present    | Present     | Refuse startup because the correct source is ambiguous |
+
+</br>
+The first local → S3 sync is performed before marking the container healthy. That ensures an existing stack’s bucket is populated before dependent services start.<br/><br/>
+
+A failed S3 listing will not count as an empty bucket. If S3 target is unreachable, authentication fails, or the bucket cannot be inspected, initialization stops instead of adopting local data under a false assumption.<br/><br/>
+
+**!! THIS IS NOT INTENDED FOR USE WITH DATABASE VOLUMES !!**  
+Check out Databasus for that!
