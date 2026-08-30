@@ -75,7 +75,7 @@ services:
     volumes:
       - ../rclone/rclone-entrypoint.sh:/scripts/rclone-entrypoint.sh:ro
       - papra-rclone.state:/state
-      - papra.data:/app/app-data
+      - papra.data:/data/papra.data
     
 networks:
   # Public / External Network (Cloudflare Tunnel)
