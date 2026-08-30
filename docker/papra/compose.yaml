@@ -86,4 +86,4 @@ volumes:
   papra.data:
     name: papra.data
   papra-rclone.state:
-    name: rclone.state
+    name: papra-rclone.state
