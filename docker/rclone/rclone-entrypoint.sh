@@ -14,7 +14,7 @@ log() {
 
 local_data_exists() {
   # Application volumes are mounted in /data.
-  # The mounted directories don't count for rclone, so we go 1 level deeper.
+  # The mounted directories don't count for rclone, so go 1 level deeper, and ignore empty directories.
   [ -n "$(find /data -mindepth 2 ! -type d -print -quit)" ]
 }
 
@@ -83,6 +83,10 @@ initialize() {
       "${REMOTE}" \
       /data \
       --config /dev/null \
+      --metadata \
+      --links \
+      --create-empty-src-dirs \
+      --local-metadata-restore-special-bits \
       --verbose \
       --stats 30s
 
@@ -106,6 +110,9 @@ sync_to_s3() {
     /data \
     "${REMOTE}" \
     --config /dev/null \
+    --metadata \
+    --links \
+    --create-empty-src-dirs \
     --verbose \
     --stats 30s
 }
