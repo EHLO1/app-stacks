@@ -19,6 +19,7 @@ services:
       - RCLONE_CONFIG_S3_SECRET_ACCESS_KEY=${RCLONE_CONFIG_S3_SECRET_ACCESS_KEY}
       - RCLONE_CONFIG_S3_ENDPOINT=${RCLONE_CONFIG_S3_ENDPOINT}
       - RCLONE_CONFIG_S3_REGION=${RCLONE_CONFIG_S3_REGION}
+      - RCLONE_CONFIG_S3_DIRECTORY_MARKERS=${RCLONE_CONFIG_S3_DIRECTORY_MARKERS}
     healthcheck:
       test: ["CMD-SHELL", "test -f /state/initialized && test -f /tmp/rclone-ready"]
       interval: 10s
