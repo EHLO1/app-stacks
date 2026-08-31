@@ -15,7 +15,7 @@ log() {
 local_data_exists() {
   # Application volumes are mounted in /data.
   # The mounted directories don't count for rclone, so we go 1 level deeper.
-  [ -n "$(find /data -mindepth 2 -print -quit)" ]
+  [ -n "$(find /data -mindepth 2 ! -type d -print -quit)" ]
 }
 
 get_remote_listing() {
