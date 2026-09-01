@@ -1,0 +1,46 @@
+#-[ PROJECT NAME
+name: restic
+# https://restic.net/
+# https://github.com/restic/restic
+
+services:
+  # restic - Docker Volume Backups
+  restic:
+    image: restic/restic:${RESTIC_IMAGE_TAG}
+    container_name: restic
+    entrypoint: ["/bin/sh"]
+    command: ["/scripts/restic-entrypoint.sh"]
+    environment:
+      - RESTIC_REPOSITORY=${RESTIC_REPOSITORY}
+      - RESTIC_PASSWORD=${RESTIC_PASSWORD}
+      - RESTIC_BACKUP_INTERVAL=${RESTIC_BACKUP_INTERVAL}
+      - RESTIC_LOCK_RETRY=${RESTIC_LOCK_RETRY}
+      - RESTIC_CACHE_DIR=${RESTIC_CACHE_DIR}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - RESTIC_RETENTION_INTERVAL=${RESTIC_RETENTION_INTERVAL}
+      - RESTIC_RETENTION_KEEP_HOURLY=${RESTIC_RETENTION_KEEP_HOURLY}
+      - RESTIC_RETENTION_KEEP_DAILY=${RESTIC_RETENTION_KEEP_DAILY}
+      - ESTIC_RETENTION_KEEP_WEEKLY=${ESTIC_RETENTION_KEEP_WEEKLY}
+      - RESTIC_RETENTION_KEEP_MONTHLY=${RESTIC_RETENTION_KEEP_MONTHLY}
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /state/initialized && test -f /tmp/restic-ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+    volumes:
+      - ./restic-entrypoint.sh:/scripts/restic-entrypoint.sh:ro
+      - restic.state:/state
+      - app-one.data:/data/app-one
+      - app-two.data:/data/app-two
+
+volumes:
+  restic.state:
+    name: restic.state
+  app-one.data:
+    name: app-one.data
+  app-two.data:
+    name: app-two.data
