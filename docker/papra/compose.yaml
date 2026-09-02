@@ -79,7 +79,7 @@ services:
       start_period: 30s
     restart: unless-stopped
     volumes:
-      - ./restic/restic-entrypoint.sh:/scripts/restic-entrypoint.sh:ro
+      - ../restic/restic-entrypoint.sh:/scripts/restic-entrypoint.sh:ro
       - papra-restic.state:/state
       - papra.data:/data/papra.data
     
