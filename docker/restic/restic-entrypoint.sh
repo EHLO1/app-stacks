@@ -109,17 +109,21 @@ write_marker() {
 backup_data() {
   log "Creating Restic snapshot of /data..."
 
-  restic_cmd backup \
-    --group-by paths \
-    --skip-if-unchanged \
-    /data
+  (
+    cd /data
+
+    restic_cmd backup \
+      --group-by paths \
+      --skip-if-unchanged \
+      .
+  )
 }
 
 restore_data() {
   log "Restoring the latest Restic snapshot into /data..."
 
   restic_cmd restore \
-    latest:/data \
+    latest \
     --target /data
 
   log "Restore completed successfully."
@@ -152,6 +156,7 @@ run_retention() {
   log "Applying Restic snapshot retention and pruning..."
 
   if restic_cmd forget \
+    --group-by paths \
     --keep-hourly "${KEEP_HOURLY}" \
     --keep-daily "${KEEP_DAILY}" \
     --keep-weekly "${KEEP_WEEKLY}" \
@@ -161,12 +166,12 @@ run_retention() {
     date +%s > "${LAST_RETENTION_RUN}"
     log "Restic retention run completed successfully."
     return 0
+  else
+    status=$?
+    log "WARNING: Restic retention run failed with status ${status}."
+    log "Retention run will be retried after the next successful backup."
+    return "${status}"
   fi
-
-  status=$?
-  log "WARNING: Restic retention run failed with status ${status}."
-  log "Retention run will be retried after the next successful backup."
-  return "${status}"
 }
 
 initialize() {
@@ -196,13 +201,13 @@ initialize() {
     validate_marker
 
     # Scenario: Marker = true, snapshots = true, local data = true
-    # Action:   Normal statup of an already initialized stack.
+    # Action:   Normal startup of an already initialized stack.
     if local_data_exists; then
       if [ "${SNAPSHOTS_EXIST}" = true ]; then
         log "Local volumes and Restic repository are initialized."
       
       # Scenario: Marker = true, snapshots = false, local data = true
-      # Action:   Create a new snapshot, then proceed with normal statup of an
+      # Action:   Create a new snapshot, then proceed with normal startup of an
       #           already initialized stack.
       else
         log "WARNING: State marker exists, but the repository has no snapshots."
