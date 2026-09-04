@@ -1,0 +1,12 @@
+{$BASE_URL} {
+    tls {
+        issuer acme {
+            email {$SSL_EMAIL}
+            dns cloudflare {$CLOUDFLARE_API_TOKEN}
+            resolvers 1.1.1.1 1.0.0.1
+        }
+    }
+    reverse_proxy versitygw:7070
+
+    header Access-Control-Allow-Private-Network true
+}

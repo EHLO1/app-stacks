@@ -1,0 +1,63 @@
+#-[ PROJECT NAME
+name: versitygw
+# https://www.versity.com/products/versitygw/
+# https://github.com/versity/versitygw
+
+services:
+  # Versity Gateway - S3 Gateway
+  versitygw:
+    image: versity/versitygw:${VERSITYGW_IMAGE_TAG}
+    container_name: versitygw
+    environment:
+      - VGW_PORT=${VGW_PORT}
+      - VGW_WEBUI_PORT=${VGW_WEBUI_PORT}
+      - VGW_ADMIN_PORT=${VGW_ADMIN_PORT}
+      - VGW_VIRTUAL_DOMAIN=${VGW_VIRTUAL_DOMAIN}
+      - VGW_REGION=${VGW_REGION}
+      - VGW_BACKEND=${VGW_BACKEND}
+      - VGW_BACKEND_ARGS=${VGW_BACKEND_ARGS}
+      - VGW_VERSIONING_DIR=${VGW_VERSIONING_DIR}
+      - VGW_IAM_DIR=${VGW_IAM_DIR}
+      - ROOT_ACCESS_KEY=${ROOT_ACCESS_KEY}
+      - ROOT_SECRET_KEY=${ROOT_SECRET_KEY}
+    networks:
+      - cloudflare-ingress
+      - versitygw-internal
+    restart: unless-stopped
+    volumes:
+      - versitygw.data:/data
+
+  # Caddy - Reverse Proxy
+  versitygw-caddy:
+    build:
+      context: .
+      dockerfile: ./caddy/Dockerfile
+    container_name: versitygw-caddy
+    environment:
+      - BASE_URL=${BASE_URL}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - SSL_EMAIL=${SSL_EMAIL}
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+    networks:
+      - versitygw-internal
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - versitygw-caddy.data:/data
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Local Network Proxied by Caddy with Let's Encrypt
+  versitygw-internal:
+    driver: bridge
+    name: versitygw-internal
+
+volumes:
+  versitygw.data:
+    name: versitygw.data
+  versitygw-caddy.data:
+    name: versitygw-caddy.data
