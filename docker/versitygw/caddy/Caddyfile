@@ -12,7 +12,7 @@
         reverse_proxy versitygw-iam:7076
     }
     
-    handle{
+    handle {
         reverse_proxy versitygw:7070
     }
 
