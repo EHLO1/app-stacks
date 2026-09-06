@@ -86,5 +86,7 @@ volumes:
     name: versitygw.data
   versitygw.iam:
     name: versitygw.iam
+  versitygw.run:
+    name: versitygw.run
   versitygw-caddy.data:
     name: versitygw-caddy.data
