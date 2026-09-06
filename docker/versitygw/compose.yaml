@@ -8,24 +8,52 @@ services:
   versitygw:
     image: versity/versitygw:${VERSITYGW_IMAGE_TAG}
     container_name: versitygw
+    depends_on:
+      - versitygw-iam
     environment:
-      - VGW_PORT=${VGW_PORT}
-      - VGW_WEBUI_PORT=${VGW_WEBUI_PORT}
-      - VGW_ADMIN_PORT=${VGW_ADMIN_PORT}
+      - VGW_PORT=${VGW_WEBUI_S3_PORT}
+      - VGW_BACKEND=${VGW_WEBUI_S3_BACKEND}
+      - VGW_BACKEND_ARGS=${VGW_WEBUI_S3_BACKEND_ARGS}
+      - VGW_VERSIONING_DIR=${VGW_WEBUI_S3_VERSIONING_DIR}
+      - VGW_WEBUI_S3_PREFIX=${VGW_WEBUI_S3_PREFIX}
+      - VGW_WEBUI_GATEWAYS=${VGW_WEBUI_GATEWAYS}
+      - VGW_WEBUI_IAM_GATEWAYS=${VGW_WEBUI_IAM_GATEWAYS}
+      - VGW_IAM_STANDALONE_ENDPOINT=${VGW_IAM_STANDALONE_ENDPOINT}
+      - VGW_IAM_STANDALONE_DEFAULT_UID=${VGW_IAM_STANDALONE_DEFAULT_UID}
+      - VGW_IAM_STANDALONE_DEFAULT_GID=${VGW_IAM_STANDALONE_DEFAULT_GID}
       - VGW_VIRTUAL_DOMAIN=${VGW_VIRTUAL_DOMAIN}
+      - VGW_CORS_ALLOW_ORIGIN=${VGW_CORS_ALLOW_ORIGIN}
       - VGW_REGION=${VGW_REGION}
-      - VGW_BACKEND=${VGW_BACKEND}
-      - VGW_BACKEND_ARGS=${VGW_BACKEND_ARGS}
-      - VGW_VERSIONING_DIR=${VGW_VERSIONING_DIR}
-      - VGW_IAM_DIR=${VGW_IAM_DIR}
       - ROOT_ACCESS_KEY=${ROOT_ACCESS_KEY}
       - ROOT_SECRET_KEY=${ROOT_SECRET_KEY}
     networks:
-      - cloudflare-ingress
       - versitygw-internal
     restart: unless-stopped
     volumes:
       - versitygw.data:/data
+      - versitygw.run:/run/vgw
+
+  # Versity Gateway - IAM Standalone Endpoint
+  versitygw-iam:
+    image: versity/versitygw:${VERSITYGW_IMAGE_TAG}
+    container_name: versitygw-iam
+    environment:
+      - VGW_PORT=${VGW_IAM_PORT}
+      - VGW_IAM_DIR=${VGW_IAM_DIR}
+      - VGW_BACKEND=${VGW_IAM_BACKEND}
+      - VGW_IAM_PRIVATE_PORTS=${VGW_IAM_PRIVATE_PORTS}
+      - VGW_IAM_PRIVATE_SOCKET_PERM=${VGW_IAM_PRIVATE_SOCKET_PERM}
+      - VGW_VIRTUAL_DOMAIN=${VGW_VIRTUAL_DOMAIN}
+      - VGW_CORS_ALLOW_ORIGIN=${VGW_CORS_ALLOW_ORIGIN}
+      - VGW_REGION=${VGW_REGION}
+      - ROOT_ACCESS_KEY=${VERSITYGW_ROOT_ACCESS_KEY}
+      - ROOT_SECRET_KEY=${VERSITYGW_ROOT_SECRET_KEY}
+    networks:
+      - versitygw-internal
+    restart: unless-stopped
+    volumes:
+      - versitygw.iam:/data/iam
+      - versitygw.run:/run/vgw
 
   # Caddy - Reverse Proxy
   versitygw-caddy:
@@ -48,9 +76,6 @@ services:
       - versitygw-caddy.data:/data
 
 networks:
-  # Public / External Network (Cloudflare Tunnel)
-  cloudflare-ingress:
-    external: true
   # Local Network Proxied by Caddy with Let's Encrypt
   versitygw-internal:
     driver: bridge
@@ -59,5 +84,7 @@ networks:
 volumes:
   versitygw.data:
     name: versitygw.data
+  versitygw.iam:
+    name: versitygw.iam
   versitygw-caddy.data:
     name: versitygw-caddy.data

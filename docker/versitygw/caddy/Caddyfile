@@ -6,7 +6,15 @@
             resolvers 1.1.1.1 1.0.0.1
         }
     }
-    reverse_proxy versitygw:7070
+    
+    @iam path /iam /iam/*
+    handle @iam {
+        reverse_proxy versitygw-iam:7076
+    }
+    
+    handle{
+        reverse_proxy versitygw:7070
+    }
 
     header Access-Control-Allow-Private-Network true
 }
