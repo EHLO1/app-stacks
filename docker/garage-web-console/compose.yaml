@@ -1,0 +1,26 @@
+#-[ PROJECT NAME
+name: garage-web-console
+# https://github.com/EHLO1/garage-web-console
+
+services:
+  # Garage Web Console (GWC) - Web UI For Garage S3
+  garag-web-console:
+    image: ghcr.io/ehlo1/garage-web-console:${GWC_IMAGE_TAG:-latest}
+    container_name: garage-web-console
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+    environment:
+      - 
+    networks:
+      # Default Port: 3909
+      - cloudflare-ingress
+    restart: unless-stopped
+    volumes:
+      - 
+
+volumes:
+  garage.meta:
+    name: garage.meta
