@@ -1,0 +1,45 @@
+gerbil:
+    start_port: 51820
+    # Dashboard Domain
+    base_endpoint: "pangolin.jjcasa.net"
+
+app:
+    # Dashboard Domain
+    dashboard_url: "https://pangolin.jjcasa.net"
+    log_level: "info"
+    telemetry:
+        anonymous_usage: true
+
+domains:
+    domain1:
+        # Base Domain
+        base_domain: "jjcasa.net"
+        prefer_wildcard_cert: true
+        cert_resolver: "letsencrypt"
+
+traefik:
+    cert_resolver: "letsencrypt"
+    prefer_wildcard_cert: true
+
+server:
+    secret: "{{.SERVER_SECRET}}" # REPLACE WITH SECURE SECRET
+    email:
+        smtp_host: "smtp.gmail.com"
+        smtp_port: 587
+        smtp_user: "{{.SMTP_USER}}"
+        smtp_pass: "{{.SMTP_PASSWORD}}"
+        no_reply: "{{.SMTP_FROM}}"
+    cors:
+        # Dashboard Domain
+        origins: ["https://pangolin.jjcasa.net"]
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+        allowed_headers: ["X-CSRF-Token", "Content-Type"]
+        credentials: false
+    maxmind_db_path: "./config/GeoLite2/GeoLite2-Country.mmdb"
+    maxmind_asn_path: "./config/GeoLite2/GeoLite2-ASN.mmdb"
+
+flags:
+    require_email_verification: true
+    disable_signup_without_invite: true
+    disable_user_create_org: false
+    allow_raw_resources: true

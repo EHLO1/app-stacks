@@ -1,0 +1,75 @@
+#-[ PROJECT NAME
+name: coder
+# https://coder.com/
+# https://github.com/coder/coder
+
+services:
+  # Postgres - SQL Database
+  coder-postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: coder-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - coder-backend
+      - backup-net
+    restart: unless-stopped
+    volumes:
+      - coder-postgres.data:/var/lib/postgresql/data
+
+  # Coder - Online Dev Platform
+  coder:
+    image: ghcr.io/coder/coder:${CODER_IMAGE_TAG}
+    container_name: coder
+    depends_on:
+      coder-postgres:
+        condition: service_healthy
+    environment:
+      - CODER_HTTP_ADDRESS=${CODER_HTTP_ADDRESS}
+      - CODER_ACCESS_URL=${CODER_ACCESS_URL}
+      - CODER_WILDCARD_ACCESS_URL=${CODER_WILDCARD_ACCESS_URL}
+      - CODER_DISABLE_PATH_APPS=${CODER_DISABLE_PATH_APPS}
+      - CODER_PG_CONNECTION_URL=${CODER_PG_CONNECTION_URL}
+      - CODER_OIDC_GROUP_AUTO_CREATE=${CODER_OIDC_GROUP_AUTO_CREATE}
+      - CODER_OIDC_ALLOW_SIGNUPS=${CODER_OIDC_ALLOW_SIGNUPS}
+      - CODER_OIDC_ALLOWED_GROUPS=${CODER_OIDC_ALLOWED_GROUPS}
+      - CODER_OIDC_ISSUER_URL=${CODER_OIDC_ISSUER_URL}
+      - CODER_OIDC_CLIENT_ID=${CODER_OIDC_CLIENT_ID}
+      - CODER_OIDC_CLIENT_SECRET=${CODER_OIDC_CLIENT_SECRET}
+      - CODER_OIDC_GROUP_FIELD=${CODER_OIDC_GROUP_FIELD}
+      - CODER_OIDC_SCOPES=${CODER_OIDC_SCOPES}
+      - CODER_OIDC_USERNAME_FIELD=${CODER_OIDC_USERNAME_FIELD}
+      - CODER_OIDC_ICON_URL=${CODER_OIDC_ICON_URL}
+      - CODER_OIDC_SIGN_IN_TEXT=${CODER_OIDC_SIGN_IN_TEXT}
+      - CODER_DISABLE_PASSWORD_AUTH=${CODER_DISABLE_PASSWORD_AUTH}
+    networks:
+      # Default Port: 7080
+      - cloudflare-ingress
+      - coder-backend
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  cloudflare-ingress:
+    external: true
+  # Storage / Backend Network (Not Accessible Externally)
+  coder-backend:
+    driver: bridge
+    name: coder-backend
+  # Internal Network for Backups (Not Accessible Externally)
+  backup-net:
+    external: true
+
+volumes:
+  coder-postgres.data:
+    name: coder-postgres.data

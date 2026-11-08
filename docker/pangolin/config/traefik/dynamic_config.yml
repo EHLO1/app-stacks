@@ -1,0 +1,83 @@
+http:
+  middlewares:
+    badger:
+      plugin:
+        badger:
+          disableForwardAuth: true
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+
+  routers:
+    main-app-router-redirect:
+      # Dashboard Domain
+      rule: "Host(`pangolin.jjcasa.net`)"
+      service: next-service
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+        - badger
+
+    next-router:
+      # Dashboard Domain
+      rule: "Host(`pangolin.jjcasa.net`) && !PathPrefix(`/api/v1`)"
+      service: next-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: "jjcasa.net"
+            sans:
+              - "*.jjcasa.net"
+              - "*.*.jjcasa.net"
+
+    api-router:
+      # Dashboard Domain
+      rule: "Host(`pangolin.jjcasa.net`) && PathPrefix(`/api/v1`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+
+    ws-router:
+      # Dashboard Domain
+      rule: "Host(`pangolin.jjcasa.net`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    next-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3002"
+
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3000"
+
+tcp:
+  serversTransports:
+    pp-transport-v1:
+      proxyProtocol:
+        version: 1
+    pp-transport-v2:
+      proxyProtocol:
+        version: 2
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12

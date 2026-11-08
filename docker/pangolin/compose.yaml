@@ -1,0 +1,105 @@
+#-[ PROJECT NAME
+name: pangolin
+# https://pangolin.net/
+# https://github.com/fosrl/pangolin
+
+services:
+  # Postgres - SQL Database
+  postgres:
+    image: postgres:${POSTGRES_IMAGE_TAG}
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    volumes:
+      - postgres.data:/var/lib/postgresql/data
+
+  # Pangolin - Reverse Proxy, Tunneling, Cloudflare Alternative
+  pangolin:
+    image: docker.io/fosrl/pangolin:${PANGOLIN_IMAGE_TAG}
+    container_name: pangolin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - POSTGRES_CONNECTION_STRING=${POSTGRES_CONNECTION_STRING}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+
+  # Gerbil - WireGuard Handler
+  gerbil:
+    image: docker.io/fosrl/gerbil:${GERBIL_IMAGE_TAG}
+    container_name: gerbil
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    command:
+      - --reachableAt=http://gerbil:3004
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    ports:
+      - 51820:51820/udp
+      - 21820:21820/udp
+      - 443:443
+      - 443:443/udp # Need to enable HTTP/3 in Traefik
+      - 80:80
+    restart: unless-stopped
+    volumes:
+      - ./config:/var/config
+
+  # Traefik
+  traefik:
+    image: docker.io/traefik:${TRAEFIK_IMAGE_TAG}
+    container_name: traefik
+    command:
+      - --configFile=/etc/traefik/traefik_config.yml
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    network-mode: service:gerbil
+    restart: unless-stopped
+    volumes:
+      - ./config/traefik:/etc/traefik:ro
+      - ./config/letsencrypt:/letsencrypt
+      - ./config/traefik/logs:/var/log/traefik
+
+  # MaxMind GeoIPUpdate - Automates pulling new versions of MaxMind's GeoIP Database
+  geoipupdate:
+    image: ghcr.io/maxmind/geoipupdate:${GEOIPUPDATE_IMAGE_TAG}
+    container_name: geoipupdate
+    environment:
+      - GEOIPUPDATE_ACCOUNT_ID=${GEOIPUPDATE_ACCOUNT_ID}
+      - GEOIPUPDATE_LICENSE_KEY=${GEOIPUPDATE_LICENSE_KEY}
+      - GEOIPUPDATE_EDITION_IDS=${GEOIPUPDATE_EDITION_IDS}
+      - GEOIPUPDATE_FREQUENCY=${GEOIPUPDATE_FREQUENCY}
+    restart: unless-stopped
+    volumes:
+      - './config/GeoLite2:/usr/share/GeoIP'
+
+volumes:
+  postgres.data:
+    name: postgres.data
