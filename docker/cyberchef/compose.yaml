@@ -10,10 +10,9 @@ services:
     container_name: cyberchef
     networks:
       # Default Port: 8080
-      - cloudflare-ingress
+      - caddy-ingress-internal
     restart: unless-stopped
 
 networks:
-  # Public / External Network (Cloudflare Tunnel)
-  cloudflare-ingress:
+  caddy-ingress-internal:
     external: true
