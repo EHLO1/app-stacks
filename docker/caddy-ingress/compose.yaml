@@ -10,6 +10,11 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: caddy-ingress
+    command:
+      - run
+      - --config
+      - /etc/caddy/bootstrap.json
+      - --resume
     environment:
       - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
       - SSL_EMAIL=${SSL_EMAIL}
@@ -20,8 +25,12 @@ services:
       - 2021:2021
     restart: unless-stopped
     volumes:
+      - ./bootstrap.json:/etc/caddy/bootstrap.json:ro
       - caddy-ingress.data:/data
+      - caddy-ingress.config:/config
 
 volumes:
   caddy-ingress.data:
     name: caddy-ingress.data
+  caddy-ingress.config:
+    name: caddy-ingress.config
