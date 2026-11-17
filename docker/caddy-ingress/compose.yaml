@@ -1,0 +1,28 @@
+#-[ PROJECT NAME
+name: caddy-internal
+# https://caddyserver.com/
+# https://github.com/caddyserver/caddy
+
+services:
+  # Caddy - Dynamic TLS & Reverse Proxy
+  caddy-internal:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: caddy-internal
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - SSL_EMAIL=${SSL_EMAIL}
+      - CF_N8N_WEBHOOK_CLIENT_ID=${CF_N8N_WEBHOOK_CLIENT_ID}
+      - CF_N8N_WEBHOOK_CLIENT_SECRET=${CF_N8N_WEBHOOK_CLIENT_SECRET}
+      - CADDY_API_TOKEN=${CADDY_API_TOKEN}
+    ports:
+      - 80:80
+      - 443:443
+      - 2020:2020
+    restart: unless-stopped
+    volumes:
+      - caddy-internal.data:/data
+
+volumes:
+  caddy-internal.data:

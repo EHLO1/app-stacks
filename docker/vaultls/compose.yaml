@@ -1,0 +1,33 @@
+#-[ PROJECT NAME
+name: vaultls
+# https://github.com/7ritn/VaulTLS
+
+services:
+  # VaulTLS - Lightweight CA & mTLS Management with ACME Services
+  vaultls:
+    image: ghcr.io/7ritn/vaultls:${VAULTLS_IMAGE_TAG}
+    container_name: vaultls
+    environment:
+      - VAULTLS_URL=${VAULTLS_URL}
+      - VAULTLS_API_SECRET=${VAULTLS_API_SECRET}
+      - VAULTLS_DB_SECRET=${VAULTLS_DB_SECRET}
+      - VAULTLS_OIDC_AUTH_URL=${VAULTLS_OIDC_AUTH_URL}
+      - VAULTLS_OIDC_CALLBACK_URL=${VAULTLS_OIDC_CALLBACK_URL}
+      - VAULTLS_OIDC_ID=${VAULTLS_OIDC_ID}
+      - VAULTLS_OIDC_SECRET=${VAULTLS_OIDC_SECRET}
+      - VAULTLS_OIDC_ADDITIONAL_AUDIENCES=${VAULTLS_OIDC_ADDITIONAL_AUDIENCES}
+    networks:
+      # Default Port: 80
+      - mbox-cloudflare
+    restart: unless-stopped
+    volumes:
+      - vaultls.data:/app/data
+
+networks:
+  # Public / External Network (Cloudflare Tunnel)
+  mbox-cloudflare:
+    external: true
+
+volumes:
+  vaultls.data:
+    name: vaultls.data

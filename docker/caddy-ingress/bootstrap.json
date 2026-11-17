@@ -1,0 +1,55 @@
+
+{
+  "admin": {
+    "listen": "127.0.0.1:2019",
+    "identity": {
+      "identifiers": [
+        "caddy-admin.example.internal"
+      ],
+      "issuers": [
+        {
+          "module": "internal"
+        }
+      ]
+    },
+    "remote": {
+      "listen": ":2021",
+      "access_control": [
+        {
+          "public_keys": [
+            "REPLACE_WITH_BASE64_DER_CERTIFICATE"
+          ],
+          "permissions": [
+            {
+              "paths": [
+                "/config/apps/http/servers/ingress/routes"
+              ],
+              "methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "apps": {
+    "http": {
+      "servers": {
+        "ingress": {
+          "listen": [
+            ":443"
+          ],
+          "routes": [],
+          "tls_connection_policies": [
+            {}
+          ]
+        }
+      }
+    }
+  }
+}
