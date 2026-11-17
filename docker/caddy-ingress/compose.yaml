@@ -20,10 +20,22 @@ services:
       - 443:443/udp
       - 2021:2021
     restart: unless-stopped
+    networks:
+      - caddy-ingress-apps
+      - caddy-ingress-internal
+      - caddy-ingress-admin
     volumes:
       - ./bootstrap.json:/etc/caddy/bootstrap.json:ro
       - caddy-ingress.data:/data
       - caddy-ingress.config:/config
+
+networks:
+  caddy-ingress-apps:
+    external: true
+  caddy-ingress-internal:
+    external: true
+  caddy-ingress-admin:
+    external: true
 
 volumes:
   caddy-ingress.data:
