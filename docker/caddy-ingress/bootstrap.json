@@ -1,10 +1,9 @@
-
 {
   "admin": {
     "listen": "127.0.0.1:2019",
     "identity": {
       "identifiers": [
-        "caddy-admin.example.internal"
+        "komodo-app1.svc.jjcasa.net"
       ],
       "issuers": [
         {
@@ -17,7 +16,7 @@
       "access_control": [
         {
           "public_keys": [
-            "REPLACE_WITH_BASE64_DER_CERTIFICATE"
+            "MIIDSjCCAjKgAwIBAgIUMq77ytKMr2gQNCEwkFXM6mZ2QRgwDQYJKoZIhvcNAQELBQAwgagxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMRkwFwYDVQQKExBDbG91ZGZsYXJlLCBJbmMuMRswGQYDVQQLExJ3d3cuY2xvdWRmbGFyZS5jb20xNDAyBgNVBAMTK01hbmFnZWQgQ0EgMjE0ZWVhZWQwNjhiZmY3MzU1ZDI0YmUyYTA0MjFmMjYwHhcNMjYxMTE3MTMyMzAwWhcNMzYxMTE0MTMyMzAwWjAiMQswCQYDVQQGEwJVUzETMBEGA1UEAxMKQ2xvdWRmbGFyZTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABI5IcS1ijzPJtu+BQDH+V8+Rv+nn+abSyAeW3MvmOAvpna9eQeYMJMDHgV7tMcc5gDkOZ2iwI+sPLppsY5avIg6jgbswgbgwEwYDVR0lBAwwCgYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUcvEChaAjHa+ZCBBQbRfIiJ/P1UwwHwYDVR0jBBgwFoAUYihEY8vWeZuFd6LG81gbDw6U6RkwUwYDVR0fBEwwSjBIoEagRIZCaHR0cDovL2NybC5jbG91ZGZsYXJlLmNvbS8wYjY3NzgyZC0xNWRlLTQ4NWYtODZlMi00ZmQ0MWMxYjk5ZTcuY3JsMA0GCSqGSIb3DQEBCwUAA4IBAQAVbLrOb/fqPXvkPOji8lHgRK0KFyvO8f6j4y5u4MKrkt1O1bxuuE/nwveD1stjRN+OnR2OsiTySiBNbyg5bk0jJNUNfBihTgi8mA6M0VImcjRUBMLUA23Z/dR4MU9nqopHH1meFpJGhDeZFf34+bGUxIWfl7uGVh3YRcnG/EwhtILWGOy8gqOE9vhRfWMcPPB9B6fAA2zEZ5Jy7JSZEqUXbYK3FR+Yrg7zlK/x8QkWtPuyx3WKuhbD9W7Vf1rklqMM1yHua5AAWWRcDy+tJJGQeYYPPTiRWJvIAlqtTyrTXYeBRYUgkaTQC5mEWtLnbCduGux0Vl6veZ18AV83WUN1"
           ],
           "permissions": [
             {
@@ -49,6 +48,39 @@
             {}
           ]
         }
+      }
+    },
+    "tls": {
+      "certificates": {
+        "automate": [
+          "*.jjcasa.net",
+          "*.internal.jjcasa.net",
+          "*.admin.jjcasa.net"
+        ]
+      },
+      "automation": {
+        "policies": [
+          {
+            "issuers": [
+              {
+                "module": "acme",
+                "email": "{env.SSL_EMAIL}",
+                "challenges": {
+                  "dns": {
+                    "provider": {
+                      "name": "cloudflare",
+                      "api_token": "{env.CLOUDFLARE_API_TOKEN}"
+                    },
+                    "resolvers": [
+                      "1.1.1.1:53",
+                      "1.0.0.1:53"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
       }
     }
   }

@@ -1,28 +1,27 @@
 #-[ PROJECT NAME
-name: caddy-internal
+name: caddy-ingress
 # https://caddyserver.com/
 # https://github.com/caddyserver/caddy
 
 services:
   # Caddy - Dynamic TLS & Reverse Proxy
-  caddy-internal:
+  caddy-ingress:
     build:
-      context: .
+      context: ./config
       dockerfile: ./Dockerfile
-    container_name: caddy-internal
+    container_name: caddy-ingress
     environment:
       - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
       - SSL_EMAIL=${SSL_EMAIL}
-      - CF_N8N_WEBHOOK_CLIENT_ID=${CF_N8N_WEBHOOK_CLIENT_ID}
-      - CF_N8N_WEBHOOK_CLIENT_SECRET=${CF_N8N_WEBHOOK_CLIENT_SECRET}
-      - CADDY_API_TOKEN=${CADDY_API_TOKEN}
     ports:
       - 80:80
       - 443:443
-      - 2020:2020
+      - 443:443/udp
+      - 2021:2021
     restart: unless-stopped
     volumes:
-      - caddy-internal.data:/data
+      - caddy-ingress.data:/data
 
 volumes:
-  caddy-internal.data:
+  caddy-ingress.data:
+    name: caddy-ingress.data
