@@ -7,7 +7,7 @@ services:
   # Caddy - Dynamic TLS & Reverse Proxy
   caddy-ingress:
     build:
-      context: ./config
+      context: .
       dockerfile: ./Dockerfile
     container_name: caddy-ingress
     environment:
