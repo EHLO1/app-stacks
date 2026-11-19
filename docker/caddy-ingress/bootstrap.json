@@ -21,7 +21,8 @@
           "permissions": [
             {
               "paths": [
-                "/config/apps/http/servers/ingress/routes"
+                "/config/apps/http/servers/ingress/routes",
+                "/id"
               ],
               "methods": [
                 "GET",
