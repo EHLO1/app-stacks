@@ -1,0 +1,202 @@
+# CrowdSec Web UI application configuration.
+# For Docker, copy this file to data/config.yaml and adjust it. The application
+# automatically loads /app/data/config.yaml.
+# CONFIG_ variables are persisted when this file is first created and otherwise
+# override it in memory. Set CONFIG_PERSIST_OVERRIDES: "true" to persist them on
+# every startup. Their names mirror YAML paths (for example
+# CONFIG_SERVER_PORT), while arrays use zero-based indexes (for example
+# CONFIG_INSTANCES_0_LAPI_URL).
+# The zero index may be omitted: CONFIG_INSTANCE_LAPI_URL addresses instance 0,
+# and CONFIG_INSTANCE_METRICS_URL addresses metrics endpoint 0 on instance 0.
+# Values that Settings can also change (refresh interval, manual refresh,
+# password login, OIDC) are locked in Settings while they are set here or
+# through a CONFIG_ variable. To manage one in Settings again, remove it from
+# both places and restart.
+
+# Settings that remain commented continue to follow the defaults of the installed
+# version. Uncomment only values that you want to manage and pin.
+server:
+  port: 3000
+  basePath: ""
+  hostname: cswui.admin.jjcasa.net # Name announced to remote services, such as the SMTP EHLO name; defaults to localhost.
+
+# statistics:
+#   enabled: true # Durable historical attack and decision summaries; on for new installations, opt-in for existing ones.
+#   retentionDays: 90 # 1–3650 UTC calendar days, including today.
+#   jobInterval: 1h # 5m–24h; reads never trigger collection.
+#   jobTimeBudget: 30s # 1s–60s per consolidation run; a remaining backlog continues each minute. Maintenance runs independently.
+
+# storage:
+#   dataDir: /app/data # state.db with users, notification rules, and settings; back this up.
+#   cacheDir: /app/data # cache.db, rebuilt from LAPI when lost; defaults to dataDir.
+#   geonamesDir: /app/geonames
+#   walEnabled: true # cache.db and statistics.db; set to false for filesystems that do not support SQLite WAL.
+#   incrementalVacuumEnabled: true # Enables bounded idle maintenance for compatible cache databases.
+#   journalSizeLimit: 128MiB # Retained cache WAL size after checkpoints; use unlimited to disable trimming.
+#   queryTimeout: 30s # Raise for very large databases or slow storage.
+#   analyticsQueryTimeout: 60s # Timeout for dashboard statistics queries.
+
+# ui:
+#   timeZone: browser # Or an IANA zone such as Europe/Berlin or UTC.
+#   timeFormat: browser # browser, 12h, or 24h.
+#   dateFormat: browser # Or a pattern such as dd/mm/yyyy, mm/dd/yyyy, or yyyy-MM-dd.
+#   readOnly: false
+#   # Show the Allowlists sidebar link. Omit to manage it from Settings.
+#   allowlistsSidebarVisible: true
+#   # Show the Statistics sidebar link. Omit to manage it from Settings.
+#   statisticsSidebarVisible: true
+#   # Show the Metrics sidebar link. Omit to manage it from Settings.
+#   metricsSidebarVisible: true
+
+# updates:
+#   enabled: true
+
+auth:
+  enabled: auto # New databases enable auth; migrated databases keep their existing state.
+#   Direct secret strings are supported, but file references are recommended so
+#   secrets do not end up in source control, backups, or configuration tooling.
+#   sessionSecret: change-me
+  # sessionSecret:
+  #   env: CONFIG_AUTH_SESSION_SECRET
+#   totpSecret:
+#     file: /run/secrets/auth_totp_secret
+#   totpSeed:
+#     env: AUTH_TOTP_SEED
+  passwordLogin:
+    enabled: false # Unset = managed in Settings; true/false locks it. false stays enabled until OIDC or a passkey exists.
+  oidc:
+    # issuerUrl: https://idp.example.com/application/o/crowdsec/
+    # clientId: crowdsec-web-ui
+    # clientSecret:
+    #   file: /run/secrets/oidc_client_secret
+    scope: openid profile email groups
+    groupsClaim: groups
+    adminGroups: [cswui_admins]
+    readOnlyGroups: [cswui_users]
+    unmatchedRole: deny
+    endSession: false # Requires the post-logout redirect URI to be registered with the provider.
+    autoLogin: true # Only active when OIDC is configured and password login is disabled.
+    backchannelLogout: false # Requires the back-channel logout URI to be registered with the provider.
+    autoLinkUsername: false # Links SSO sign-ins to local accounts by username, without verifying ownership. Meant for migrations.
+
+# notifications:
+#   secretKey:
+#     file: /run/secrets/notification_secret_key
+#   allowPrivateAddresses: true
+#   debugPayloads: false
+
+# audit:
+#   enabled: true
+#   Audit entries describe user actions (added and removed decisions and
+#   alerts) as single JSON lines in the application log. Set logFile to also
+#   append them to a dedicated file.
+#   logFile: /app/data/audit.log
+
+# crowdsec:
+#   simulationsEnabled: false
+#   Uncomment alertFilters to override the default non-CAPI feed.
+#   alertFilters:
+#     includeOrigins: [crowdsec]
+#     excludeOrigins: [lists]
+#     includeCapi: false
+#     includeOriginEmpty: false
+#     excludeOriginEmpty: false
+#   Scenarios offered by the Add Decision form in addition to manual/web-ui,
+#   which is always available and selected by default.
+#   manualDecisions:
+#     scenarios: [custom/abuse-report]
+#   sync:
+#     lookback: 168h
+#     refreshInterval: 1m
+#     manualRefreshEnabled: false
+#     idleRefreshInterval: 10m
+#     idleThreshold: 2m
+#     requestTimeout: 30s
+#     bouncerPropagationDelay: 15s
+#     deletionQueueMaxAge: 24h
+#     metricsRequestTimeout: 5s
+#     heartbeatInterval: 30s
+#     alertSyncChunk: 12h
+#     alertSyncMinChunk: 15m
+#     reconcileWindow: 1h
+#     reconcileRecentAge: 24h
+#     reconcileRecentInterval: 15m
+#     reconcileActiveInterval: 5m
+#     reconcileOldInterval: 3h
+#     reconcileWindowsPerRefresh: 2
+#     bootstrapRetryDelay: 30s
+#     bootstrapRetryEnabled: true
+
+instances:
+  # id is optional and defaults to the zero-based array index. Keep an explicit,
+  # stable id when instances may be reordered after data has been imported.
+  - id: nb1
+    # name is optional and defaults to Instance <INDEX>.
+    name: CrowdSec - NetBird - NY
+    icon: 🗽
+    lapi:
+      url: http://rn-vps-nb1.jjcasa.netbird:18080
+      auth:
+        # type is optional: username/password infers password; certFile/keyFile
+        # infers mtls; no credentials infers none.
+        type: password
+        # username: crowdsec-web-ui
+        # password:
+        #   file: /run/secrets/crowdsec_password
+      # For mTLS, replace auth above with:
+      # auth:
+      #   type: mtls
+      #   certFile: /certs/agent.pem
+      #   keyFile: /certs/agent-key.pem
+      # tls:
+      #   caFile: /certs/ca.pem
+    # metrics defaults to an empty list. Uncomment the example below to add one.
+    # metrics:
+      # id and name are optional and default to the zero-based metrics index
+      # and Metrics <METRIC_INDEX>, respectively.
+      # - id: lapi
+      #   name: NB1 LAPI
+      #   icon: 📊
+      #   url: http://rn-vps-nb1.jjcasa.netbird:6060/metrics
+    #     requestTimeout: 5s
+    #     auth:
+    #       # type is optional: username/password infers basic; token infers
+    #       # bearer; no credentials infers none.
+    #       type: none
+    #     # For basic authentication, replace auth above with:
+    #     # auth:
+    #     #   type: basic
+    #     #   username: prometheus
+    #     #   password:
+    #     #     file: /run/secrets/metrics_password
+    #     # For bearer authentication, replace auth above with:
+    #     # auth:
+    #     #   type: bearer
+    #     #   token:
+    #     #     file: /run/secrets/metrics_token
+    #     # tls:
+    #     #   caFile: /certs/metrics-ca.pem
+    #     #   certFile: /certs/metrics-client.pem
+    #     #   keyFile: /certs/metrics-client-key.pem
+    # Per-instance manualDecisions replaces the global scenario list above.
+    # manualDecisions:
+    #   scenarios: [custom/branch-office]
+    # Per-instance sync values are optional and inherit the global values above.
+    # sync:
+    #   lookback: 168h
+    #   refreshInterval: 1m
+    #   idleRefreshInterval: 10m
+    #   idleThreshold: 2m
+    #   requestTimeout: 30s
+    #   heartbeatInterval: 30s
+    #   alertSyncChunk: 12h
+    #   alertSyncMinChunk: 15m
+    #   reconcileWindow: 1h
+    #   reconcileRecentAge: 24h
+    #   reconcileRecentInterval: 15m
+    #   reconcileActiveInterval: 5m
+    #   reconcileOldInterval: 3h
+    #   reconcileWindowsPerRefresh: 2
+    #   bootstrapRetryDelay: 30s
+    #   bootstrapRetryEnabled: true
+    #   bouncerPropagationDelay: 15s

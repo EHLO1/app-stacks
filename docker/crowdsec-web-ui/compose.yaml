@@ -1,0 +1,30 @@
+#-[ PROJECT NAME
+name: crowdsec-web-ui
+# https://github.com/TheDuffman85/crowdsec-web-ui
+
+services:
+  # CrowdSec Web UI - Free and Open Source Alternative to CrowdSec's Cloud Dashboard
+  crowdsec-web-ui:
+    image: ghcr.io/theduffman85/crowdsec-web-ui:${CROWDSEC_WEB_UI_IMAGE_TAG}
+    container_name: crowdsec-web-ui
+    environment:
+      - CONFIG_INSTANCES_0_LAPI_AUTH_USERNAME=${CONFIG_INSTANCES_0_LAPI_AUTH_USERNAME}
+      - CONFIG_INSTANCES_0_LAPI_AUTH_PASSWORD=${CONFIG_INSTANCES_0_LAPI_AUTH_PASSWORD}
+      - CONFIG_AUTH_OIDC_ISSUER_URL=${CONFIG_AUTH_OIDC_ISSUER_URL}
+      - CONFIG_AUTH_OIDC_CLIENT_ID=${CONFIG_AUTH_OIDC_CLIENT_ID}
+      - CONFIG_AUTH_OIDC_CLIENT_SECRET=${CONFIG_AUTH_OIDC_CLIENT_SECRET}
+    networks:
+      # Default Port: 3000
+      - caddy-ingress-admin
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/app/data/config.yaml:ro
+      - crowdsec-web-ui.data:/app/data
+    
+networks:
+  caddy-ingress-admin:
+    external: true
+
+volumes:
+  crowdsec-web-ui.data:
+    name: crowdsec-web-ui.data
