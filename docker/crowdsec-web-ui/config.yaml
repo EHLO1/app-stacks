@@ -135,7 +135,7 @@ instances:
     name: CrowdSec - NetBird - NY
     icon: 🗽
     lapi:
-      url: http://rn-vps-nb1.jjcasa.netbird:18080
+      url: http://rn-vps-nb1.jjcasa.netbird:18081
       auth:
         # type is optional: username/password infers password; certFile/keyFile
         # infers mtls; no credentials infers none.
