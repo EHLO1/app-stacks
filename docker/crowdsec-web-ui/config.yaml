@@ -151,13 +151,18 @@ instances:
       # tls:
       #   caFile: /certs/ca.pem
     # metrics defaults to an empty list. Uncomment the example below to add one.
-    # metrics:
+    metrics:
       # id and name are optional and default to the zero-based metrics index
       # and Metrics <METRIC_INDEX>, respectively.
-      # - id: lapi
-      #   name: NB1 LAPI
-      #   icon: 📊
-      #   url: http://rn-vps-nb1.jjcasa.netbird:6060/metrics
+      - id: lapi
+        name: NB1 LAPI
+        icon: 🧠
+        url: http://rn-vps-nb1.jjcasa.netbird:16060/metrics
+
+      - id: edge-engine
+        name: NB1 Edge Engine
+        icon: 🛡️
+        url: http://rn-vps-nb1.jjcasa.netbird:16060/metrics
     #     requestTimeout: 5s
     #     auth:
     #       # type is optional: username/password infers basic; token infers
