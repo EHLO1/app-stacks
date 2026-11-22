@@ -156,12 +156,7 @@ instances:
       # and Metrics <METRIC_INDEX>, respectively.
       - id: lapi
         name: NB1 LAPI
-        icon: 🧠
-        url: http://rn-vps-nb1.jjcasa.netbird:16060/metrics
-
-      - id: edge-engine
-        name: NB1 Edge Engine
-        icon: 🛡️
+        icon: 🗽
         url: http://rn-vps-nb1.jjcasa.netbird:16060/metrics
     #     requestTimeout: 5s
     #     auth:
