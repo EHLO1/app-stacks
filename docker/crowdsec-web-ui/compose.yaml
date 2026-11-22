@@ -18,7 +18,7 @@ services:
       - caddy-ingress-admin
     restart: unless-stopped
     volumes:
-      - ./config.yaml:/app/data/config.yaml:ro
+      - ./config.yaml:/app/data/config.yaml
       - crowdsec-web-ui.data:/app/data
     
 networks:
