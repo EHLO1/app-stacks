@@ -1,0 +1,61 @@
+#-[ PROJECT NAME
+name: victoriametrics-grafana
+# https://victoriametrics.com/
+# https://github.com/victoriametrics/VictoriaMetrics
+# https://grafana.com/
+# https://github.com/grafana/grafana
+
+services:
+  # VictoriaMetrics - Metrics and Timeseries Database; Alternative to Prometheus
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:${VICTORIAMETRICS_IMAGE_TAG}
+    container_name: victoriametrics
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod=90d"
+    networks:
+      # Default Port: 8428
+      - victoriametrics-backend
+    restart: unless-stopped
+    volumes:
+      - victoriametrics.data:/storage
+
+  # VictoriaMetrics Authentication - Adds basic auth
+  vmauth:
+    image: victoriametrics/vmauth:${VMAUTH_IMAGE_TAG}
+    container_name: vmauth
+    command:
+      - -auth.config=/etc/vmauth/auth.yml
+      - -httpListenAddr=:8427
+    networks:
+      # Default Port: 8427
+      - caddy-ingress-admin
+      - victoriametrics-backend
+    restart: unless-stopped
+    volumes:
+      - ./config/vmauth/auth.yml:/etc/vmauth/auth.yml:ro
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_IMAGE_TAG}
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    networks:
+      # Default Port: 3000
+      - caddy-ingress-admin
+      - victoriametrics-backend
+    restart: unless-stopped
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana.data:/var/lib/grafana    
+
+networks:
+  caddy-ingress-admin:
+    external: true
+
+volumes:
+  victoriametrics.data:
+    name: victoriametrics.data
+  grafana.data:
+    name: grafana.data
