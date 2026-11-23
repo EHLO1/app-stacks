@@ -27,6 +27,8 @@ services:
     command:
       - -auth.config=/etc/vmauth/auth.yml
       - -httpListenAddr=:8427
+    depends_on:
+      - victoriametrics
     environment:
       - VMAUTH_USERNAME=${VMAUTH_USERNAME}
       - VMAUTH_PASSWORD=${VMAUTH_PASSWORD}
