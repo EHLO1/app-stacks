@@ -12,7 +12,7 @@ services:
     container_name: victoriametrics
     command:
       - "-storageDataPath=/storage"
-      - "-retentionPeriod=12m"
+      - "-retentionPeriod=12M"
     networks:
       # Default Port: 8428
       - victoriametrics-backend
