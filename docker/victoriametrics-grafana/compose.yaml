@@ -12,13 +12,27 @@ services:
     container_name: victoriametrics
     command:
       - "-storageDataPath=/storage"
-      - "-retentionPeriod=90d"
+      - "-retentionPeriod=12m"
     networks:
       # Default Port: 8428
       - victoriametrics-backend
     restart: unless-stopped
     volumes:
       - victoriametrics.data:/storage
+
+  # VictoriaLogs - The family member with too many details
+  victorialogs:
+    image: victoriametrics/victoria-logs:${VICTORIALOGS_IMAGE_TAG}
+    container_name: victorialogs
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod=3d"
+    networks:
+      # Default Port: 9428
+      - victoriametrics-backend
+    restart: unless-stopped
+    volumes:
+      - victorialogs.data:/storage
 
   # VictoriaMetrics Authentication - Adds basic auth
   vmauth:
