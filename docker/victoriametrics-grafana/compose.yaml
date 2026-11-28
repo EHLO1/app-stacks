@@ -79,5 +79,7 @@ networks:
 volumes:
   victoriametrics.data:
     name: victoriametrics.data
+  victorialogs.data:
+    name: victorialogs.data
   grafana.data:
     name: grafana.data
