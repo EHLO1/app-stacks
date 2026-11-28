@@ -54,6 +54,22 @@ services:
     volumes:
       - ./auth.yml:/etc/vmauth/auth.yml
 
+  netbird-access-logs:
+    build:
+      context: ./collector
+      dockerfile: ./Dockerfile
+    container_name: netbird-access-logs
+    depends_on:
+      - victorialogs
+    environment:
+      - NETBIRD_MANAGEMENT_URL=${NETBIRD_MANAGEMENT_URL}
+      - NETBIRD_API_TOKEN=${NETBIRD_API_TOKEN}
+    networks:
+      - victoriametrics-backend
+    restart: unless-stopped
+    volumes:
+      - netbird-access-logs.state:/state
+
   grafana:
     image: grafana/grafana:${GRAFANA_IMAGE_TAG}
     container_name: grafana
@@ -81,5 +97,7 @@ volumes:
     name: victoriametrics.data
   victorialogs.data:
     name: victorialogs.data
+  netbird-access-logs.state:
+    name: netbird-access-logs.state
   grafana.data:
     name: grafana.data
